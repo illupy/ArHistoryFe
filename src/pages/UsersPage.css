@@ -1,0 +1,36 @@
+/* ============================================
+   Users Page Styles
+   ============================================ */
+
+.users-page {
+  animation: fadeIn 0.4s ease;
+}
+
+.users-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.user-role-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+}
+
+.role-info-text {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 768px) {
+  .users-stats {
+    grid-template-columns: 1fr;
+  }
+}

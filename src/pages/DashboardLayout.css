@@ -1,0 +1,14 @@
+/* ============================================
+   Dashboard Layout Styles
+   ============================================ */
+
+.dashboard-layout {
+  min-height: 100vh;
+}
+
+.dashboard-content {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--header-height);
+  padding: var(--space-xl);
+  min-height: calc(100vh - var(--header-height));
+}
