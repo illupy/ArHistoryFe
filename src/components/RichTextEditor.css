@@ -1,0 +1,66 @@
+.rte-container {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  transition: border-color var(--transition-base);
+  overflow: hidden;
+}
+.rte-container.rte-focused {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+
+.rte-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.rte-btn {
+  width: 32px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+.rte-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.rte-content {
+  padding: var(--space-md);
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  outline: none;
+  overflow-y: auto;
+}
+.rte-content:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+.rte-content h3 {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  margin: 0.5em 0 0.3em;
+}
+.rte-content ul, .rte-content ol {
+  padding-left: 1.5em;
+  margin: 0.3em 0;
+}
+.rte-content p {
+  margin: 0.3em 0;
+}

@@ -10,11 +10,11 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: var(--space-xl);
+  padding: 24px;
 }
 
 .modal-content {
@@ -22,8 +22,6 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
   box-shadow: var(--shadow-lg);
 }
 
@@ -66,6 +64,8 @@
 
 .modal-body {
   padding: var(--space-xl);
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
 }
 
 .modal-body .form-group {

@@ -1,0 +1,198 @@
+/* ============================================
+   Marker Models Page Styles
+   ============================================ */
+
+.marker-models-page {
+  max-width: 1200px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+}
+
+.page-title {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  margin-bottom: var(--space-xs);
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+
+/* Grid */
+.marker-model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+}
+
+.marker-model-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.marker-model-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
+}
+
+.mm-card-model {
+  height: 200px;
+  background: #1a1a2e;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mm-card-image {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+}
+
+.mm-card-image img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.mm-card-info {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.mm-card-code {
+  font-size: var(--fs-md);
+  color: var(--text-primary);
+}
+
+.mm-card-preview-code {
+  font-size: var(--fs-xs);
+  color: var(--accent-primary);
+}
+
+.mm-card-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+}
+
+.mm-card-actions {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.marker-model-card:hover .mm-card-actions {
+  opacity: 1;
+}
+
+/* Model viewer */
+.model-viewer-container {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+.model-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: var(--fs-sm);
+  background: #1a1a2e;
+}
+
+/* Preview Modal */
+.mm-preview-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.mm-preview-model {
+  height: 350px;
+  background: #1a1a2e;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.mm-preview-image {
+  text-align: center;
+}
+
+.mm-preview-image img {
+  max-height: 200px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.mm-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: var(--fs-sm);
+}
+
+.mm-preview-info p {
+  margin: 0;
+}
+
+/* Form */
+.mm-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.mm-form .upload-btn {
+  display: inline-flex;
+  margin-bottom: var(--space-sm);
+}
+
+.mm-form-model-preview {
+  height: 200px;
+  background: #1a1a2e;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: var(--space-sm);
+}
+
+.mm-form-img-preview {
+  max-height: 120px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-sm);
+  border: 1px solid var(--border-color);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}

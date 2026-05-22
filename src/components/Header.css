@@ -17,6 +17,7 @@
   justify-content: space-between;
   padding: 0 var(--space-xl);
   z-index: 90;
+  transition: left 0.3s ease;
 }
 
 .header-left {

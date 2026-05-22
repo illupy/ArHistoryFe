@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import LessonsPage from './pages/LessonsPage';
 import LessonEditorPage from './pages/LessonEditorPage';
 import UsersPage from './pages/UsersPage';
+import MarkerModelsPage from './pages/MarkerModelsPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="lessons" element={<LessonsPage />} />
             <Route path="lessons/:id/edit" element={<LessonEditorPage />} />
+            <Route path="marker-models" element={<MarkerModelsPage />} />
             <Route
               path="users"
               element={

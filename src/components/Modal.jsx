@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './Modal.css';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
@@ -13,7 +14,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className={`modal-content modal-${size} animate-scale-in`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -24,6 +25,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

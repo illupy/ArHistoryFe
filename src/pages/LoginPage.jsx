@@ -52,7 +52,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="login-header">
             <div className="login-icon">⏳</div>
-            <h1 className="login-title">AR History</h1>
+            <h1 className="login-title">Histar</h1>
             <p className="login-subtitle">Portal Quản Lý Học Liệu</p>
           </div>
 
