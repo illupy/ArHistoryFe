@@ -1,5 +1,5 @@
 /* ============================================
-   Login Page Styles
+   Login Page Styles — Redesigned
    ============================================ */
 
 .login-page {
@@ -27,7 +27,7 @@
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
+  opacity: 0.1;
 }
 
 .login-orb-1 {
@@ -62,18 +62,16 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   padding: var(--space-xl);
 }
 
 .login-card {
-  background: var(--bg-glass);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   padding: var(--space-2xl);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  box-shadow: var(--shadow-lg);
 }
 
 .login-header {
@@ -82,19 +80,16 @@
 }
 
 .login-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   margin-bottom: var(--space-md);
   display: inline-block;
-  animation: pulse 3s ease-in-out infinite;
+  /* animation: pulse 3s ease-in-out infinite; */
 }
 
 .login-title {
   font-size: var(--fs-3xl);
-  font-weight: 800;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 700;
+  color: var(--accent-primary);
   margin-bottom: var(--space-xs);
 }
 
@@ -107,16 +102,16 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .login-error {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 0.75rem 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.625rem 0.875rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
   border-radius: var(--radius-md);
   color: var(--error);
   font-size: var(--fs-sm);
@@ -125,9 +120,16 @@
 
 .login-btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.625rem;
   font-size: var(--fs-base);
   margin-top: var(--space-sm);
+  background: var(--accent-primary);
+  color: #111;
+  font-weight: 600;
+}
+
+.login-btn:hover {
+  background: var(--accent-secondary);
 }
 
 .login-btn:disabled {
@@ -139,7 +141,7 @@
 .login-footer {
   text-align: center;
   margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
+  padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
 }
 

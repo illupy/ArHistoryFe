@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import './Toast.css';
 
 let toastIdCounter = 0;
@@ -9,6 +10,13 @@ export function showToast(message, type = 'success', duration = 3000) {
     addToastFn({ id: ++toastIdCounter, message, type, duration });
   }
 }
+
+const TOAST_ICONS = {
+  success: <CheckCircle2 size={16} />,
+  error: <XCircle size={16} />,
+  warning: <AlertTriangle size={16} />,
+  info: <Info size={16} />,
+};
 
 export default function ToastContainer() {
   const [toasts, setToasts] = useState([]);
@@ -25,17 +33,14 @@ export default function ToastContainer() {
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast toast-${toast.type} animate-slide-left`}>
           <span className="toast-icon">
-            {toast.type === 'success' && '✅'}
-            {toast.type === 'error' && '❌'}
-            {toast.type === 'warning' && '⚠️'}
-            {toast.type === 'info' && 'ℹ️'}
+            {TOAST_ICONS[toast.type]}
           </span>
           <span className="toast-message">{toast.message}</span>
           <button
             className="toast-dismiss"
             onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       ))}

@@ -1,38 +1,20 @@
 /* ============================================
-   Marker Models Page Styles
+   Marker Models Page Styles — Redesigned
    ============================================ */
 
 .marker-models-page {
   max-width: 1200px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-xl);
-}
-
-.page-title {
-  font-size: var(--fs-2xl);
-  font-weight: 800;
-  margin-bottom: var(--space-xs);
-}
-
-.page-subtitle {
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-}
-
 /* Grid */
 .marker-model-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-lg);
 }
 
 .marker-model-card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -49,12 +31,12 @@
 
 .mm-card-model {
   height: 200px;
-  background: #1a1a2e;
+  background: #151515;
   border-bottom: 1px solid var(--border-color);
 }
 
 .mm-card-image {
-  height: 100px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,11 +55,11 @@
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 0.25rem;
 }
 
 .mm-card-code {
-  font-size: var(--fs-md);
+  font-size: var(--fs-base);
   color: var(--text-primary);
 }
 
@@ -96,7 +78,7 @@
   top: var(--space-sm);
   right: var(--space-sm);
   display: flex;
-  gap: var(--space-xs);
+  gap: 0.25rem;
   opacity: 0;
   transition: opacity var(--transition-base);
 }
@@ -120,19 +102,19 @@
   justify-content: center;
   color: var(--text-tertiary);
   font-size: var(--fs-sm);
-  background: #1a1a2e;
+  background: #151515;
 }
 
 /* Preview Modal */
 .mm-preview-modal {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .mm-preview-model {
   height: 350px;
-  background: #1a1a2e;
+  background: #151515;
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -164,7 +146,7 @@
 .mm-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .mm-form .upload-btn {
@@ -174,7 +156,7 @@
 
 .mm-form-model-preview {
   height: 200px;
-  background: #1a1a2e;
+  background: #151515;
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-top: var(--space-sm);

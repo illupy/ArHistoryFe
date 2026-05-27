@@ -1,9 +1,10 @@
 /* ============================================
-   Dashboard Layout Styles
+   Dashboard Layout Styles — Redesigned
    ============================================ */
 
 .dashboard-layout {
   min-height: 100vh;
+  background: var(--bg-primary);
 }
 
 .dashboard-content {
@@ -11,14 +12,21 @@
   margin-top: var(--header-height);
   padding: var(--space-xl);
   min-height: calc(100vh - var(--header-height));
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.25s ease;
 }
 
 /* When sidebar is collapsed, use :has() */
 .dashboard-layout:has(.sidebar-collapsed) .dashboard-content {
-  margin-left: 68px;
+  margin-left: var(--sidebar-collapsed-width);
 }
 
 .dashboard-layout:has(.sidebar-collapsed) .header {
-  left: 68px;
+  left: var(--sidebar-collapsed-width);
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    margin-left: 0;
+    padding: var(--space-md);
+  }
 }

@@ -1,13 +1,13 @@
 .rte-container {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   transition: border-color var(--transition-base);
   overflow: hidden;
 }
 .rte-container.rte-focused {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
 }
 
 .rte-toolbar {
@@ -20,13 +20,13 @@
 }
 
 .rte-btn {
-  width: 32px;
-  height: 28px;
+  width: 30px;
+  height: 26px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   display: flex;

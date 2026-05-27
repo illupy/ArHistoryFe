@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -151,6 +151,16 @@ export const quizApi = {
 // ========== Gamification ==========
 export const gameApi = {
   getByLesson: (lessonId) => api.get(`/api/gamification/lesson/${lessonId}`),
+};
+
+// ========== Match3 Game ==========
+export const match3Api = {
+  getAll: () => api.get('/api/match3'),
+  getById: (id) => api.get(`/api/match3/${id}`),
+  create: (data) => api.post('/api/match3', data),
+  update: (id, data) => api.put(`/api/match3/${id}`, data),
+  delete: (id) => api.delete(`/api/match3/${id}`),
+  getRandomGame: () => api.get('/api/match3/game'),
 };
 
 export default api;

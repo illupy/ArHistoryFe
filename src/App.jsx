@@ -10,6 +10,7 @@ import LessonsPage from './pages/LessonsPage';
 import LessonEditorPage from './pages/LessonEditorPage';
 import UsersPage from './pages/UsersPage';
 import MarkerModelsPage from './pages/MarkerModelsPage';
+import Match3Page from './pages/Match3Page';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="lessons" element={<LessonsPage />} />
             <Route path="lessons/:id/edit" element={<LessonEditorPage />} />
             <Route path="marker-models" element={<MarkerModelsPage />} />
+            <Route path="match3" element={<Match3Page />} />
             <Route
               path="users"
               element={

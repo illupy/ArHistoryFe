@@ -4,20 +4,21 @@ import { lessonApi, markerApi, assetApi, quizApi, uploadApi, markerModelApi } fr
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import RichTextEditor from '../components/RichTextEditor';
+import { ClipboardList, MapPin, FileText, HelpCircle, Rocket, Type, Video, Images, ArrowLeft, Plus, Pencil, Trash2, Save, Upload, Music, CircleDot, Circle, CheckCircle2, AlertTriangle, Gamepad2, ToggleLeft, ToggleRight, Image as ImageIcon } from 'lucide-react';
 import './LessonEditorPage.css';
 
 const TABS = [
-  { key: 'general', label: '📋 Nội dung bài học' },
-  { key: 'markers', label: '📍 Markers' },
-  { key: 'steps', label: '📝 Nội dung' },
-  { key: 'quiz', label: '❓ Quiz' },
-  { key: 'publish', label: '🚀 Publish' },
+  { key: 'general', label: 'Nội dung bài học', icon: ClipboardList },
+  { key: 'markers', label: 'Markers', icon: MapPin },
+  { key: 'steps', label: 'Nội dung', icon: FileText },
+  { key: 'quiz', label: 'Quiz', icon: HelpCircle },
+  { key: 'publish', label: 'Publish', icon: Rocket },
 ];
 
 const STEP_TYPES = [
-  { value: 'TEXT', label: '📝 Văn bản', icon: '📝' },
-  { value: 'VIDEO', label: '🎬 Video', icon: '🎬' },
-  { value: 'IMAGE_GALLERY', label: '🖼️ Bộ ảnh', icon: '🖼️' },
+  { value: 'TEXT', label: 'Văn bản', icon: Type },
+  { value: 'VIDEO', label: 'Video', icon: Video },
+  { value: 'IMAGE_GALLERY', label: 'Bộ ảnh', icon: Images },
 ];
 
 export default function LessonEditorPage() {
@@ -333,7 +334,7 @@ export default function LessonEditorPage() {
   return (
     <div className="editor-page animate-fade-in">
       <div className="editor-top-bar">
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/lessons')}>← Quay lại</button>
+        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/lessons')}><ArrowLeft size={14} /> Quay lại</button>
         <h1 className="editor-title">{lesson.title}</h1>
         <span className={`badge badge-${lesson.status?.toLowerCase()}`}>
           {lesson.status === 'PUBLISH' ? 'Đã xuất bản' : 'Bản nháp'}
@@ -343,7 +344,7 @@ export default function LessonEditorPage() {
       <div className="editor-tabs">
         {TABS.map(t => (
           <button key={t.key} className={`editor-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
-            {t.label}
+            {<t.icon size={14} />} {t.label}
           </button>
         ))}
       </div>
@@ -358,7 +359,7 @@ export default function LessonEditorPage() {
               <div className="form-group"><label className="form-label">Thumbnail</label>
                 <div className="thumb-upload-area">
                   {form.thumbnailUrl && <img src={form.thumbnailUrl.startsWith('/') ? `http://localhost:8080${form.thumbnailUrl}` : form.thumbnailUrl} alt="" className="thumb-preview" />}
-                  <label className="btn btn-secondary btn-sm"><span>📷 Upload ảnh</span><input type="file" accept="image/*" onChange={handleThumbUpload} hidden /></label>
+                  <label className="btn btn-secondary btn-sm"><span><Upload size={12} /> Upload ảnh</span><input type="file" accept="image/*" onChange={handleThumbUpload} hidden /></label>
                   <input className="form-input" placeholder="Hoặc nhập URL" value={form.thumbnailUrl} onChange={e => setForm({...form, thumbnailUrl: e.target.value})} />
                 </div>
               </div>
@@ -367,7 +368,7 @@ export default function LessonEditorPage() {
               <textarea className="form-input form-textarea" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
             <div className="form-group"><label className="form-label">Nội dung tổng quan</label>
               <textarea className="form-input form-textarea" style={{minHeight:180}} value={form.content} onChange={e => setForm({...form, content: e.target.value})} /></div>
-            <div className="tab-actions"><button className="btn btn-primary" onClick={saveGeneral} disabled={saving}>{saving ? 'Đang lưu...' : '💾 Lưu thông tin'}</button></div>
+            <div className="tab-actions"><button className="btn btn-primary" onClick={saveGeneral} disabled={saving}>{saving ? 'Đang lưu...' : <><Save size={14} /> Lưu thông tin</>}</button></div>
           </div>
         )}
 
@@ -375,7 +376,7 @@ export default function LessonEditorPage() {
         {tab === 'markers' && (
           <div className="tab-content animate-fade-in">
             <div className="tab-header"><h2>Markers ({markers.length})</h2>
-              <button className="btn btn-primary btn-sm" onClick={openAddMarker}>＋ Thêm marker</button>
+              <button className="btn btn-primary btn-sm" onClick={openAddMarker}><Plus size={14} /> Thêm marker</button>
             </div>
             {markers.length === 0 ? <div className="empty-state"><p className="empty-state-text">Chưa có marker. Tạo marker đầu tiên!</p></div> :
               <div className="marker-list">{markers.map(m => (
@@ -389,15 +390,15 @@ export default function LessonEditorPage() {
                       <span className={`badge ${m.active !== false ? 'badge-publish' : 'badge-draft'}`}>{m.active !== false ? 'Active' : 'Inactive'}</span>
                     </div>
                     <div className="marker-detail-fields">
-                      <span>🎮 Model: <strong>{m.previewModelCode || '—'}</strong></span>
-                      <span>🎵 Audio: {m.previewAudioUrl ? <audio controls src={m.previewAudioUrl.startsWith('/') ? `http://localhost:8080${m.previewAudioUrl}` : m.previewAudioUrl} className="marker-audio" /> : <em>Chưa có</em>}</span>
+                      <span><Gamepad2 size={12} /> Model: <strong>{m.previewModelCode || '—'}</strong></span>
+                      <span><Music size={12} /> Audio: {m.previewAudioUrl ? <audio controls src={m.previewAudioUrl.startsWith('/') ? `http://localhost:8080${m.previewAudioUrl}` : m.previewAudioUrl} className="marker-audio" /> : <em>Chưa có</em>}</span>
                     </div>
                     <span className="marker-date">Tạo: {m.createdAt?.substring(0,10)}</span>
                   </div>
                   <div className="marker-detail-actions">
-                    <button className="btn-icon" onClick={() => toggleMarkerActive(m.id)} title={m.active !== false ? 'Tắt' : 'Bật'}>{m.active !== false ? '🔴' : '🟢'}</button>
-                    <button className="btn-icon" onClick={() => openEditMarker(m)} title="Sửa">✏️</button>
-                    <button className="btn-icon" onClick={() => deleteMarker(m.id)} title="Xóa">🗑️</button>
+                    <button className="btn-icon" onClick={() => toggleMarkerActive(m.id)} title={m.active !== false ? 'Tắt' : 'Bật'}>{m.active !== false ? <ToggleRight size={16} color="var(--success)" /> : <ToggleLeft size={16} color="var(--text-tertiary)" />}</button>
+                    <button className="btn-icon" onClick={() => openEditMarker(m)} title="Sửa"><Pencil size={14} /></button>
+                    <button className="btn-icon" onClick={() => deleteMarker(m.id)} title="Xóa"><Trash2 size={14} /></button>
                   </div>
                 </div>
               ))}</div>}
@@ -408,13 +409,13 @@ export default function LessonEditorPage() {
         {tab === 'steps' && (
           <div className="tab-content animate-fade-in">
             <div className="tab-header"><h2>Nội dung bài học ({steps.length} blocks)</h2>
-              <button className="btn btn-primary btn-sm" onClick={openAddStep}>＋ Thêm block</button></div>
+              <button className="btn btn-primary btn-sm" onClick={openAddStep}><Plus size={14} /> Thêm block</button></div>
             {steps.length === 0 ? <div className="empty-state"><p className="empty-state-text">Chưa có nội dung. Thêm block đầu tiên!</p></div> :
               <div className="steps-list">{steps.map((s, i) => (
                 <div key={s.id} className="step-card" style={{animationDelay:`${i*0.05}s`}}>
                   <div className="step-order">{(s.orderIndex ?? i) + 1}</div>
                   <div className="step-body">
-                    <div className="step-type"><span className={`badge badge-${s.type?.toLowerCase()}`}>{STEP_TYPES.find(t=>t.value===s.type)?.label || s.type}</span></div>
+                    <div className="step-type"><span className={`badge badge-${s.type?.toLowerCase()}`}>{(() => { const ST = STEP_TYPES.find(t=>t.value===s.type); return ST ? <><ST.icon size={12} /> {ST.label}</> : s.type; })()}</span></div>
                     {s.type === 'TEXT' && <div className="step-text-preview" dangerouslySetInnerHTML={{__html: s.content ? s.content.substring(0, 200) : '<em>Trống</em>'}} />}
                     {s.type === 'VIDEO' && (
                       <div className="step-video-preview">
@@ -432,8 +433,8 @@ export default function LessonEditorPage() {
                     )}
                   </div>
                   <div className="step-actions">
-                    <button className="btn-icon" onClick={() => openEditStep(s)} title="Sửa">✏️</button>
-                    <button className="btn-icon" onClick={() => deleteStep(s.id)} title="Xóa">🗑️</button>
+                  <button className="btn-icon" onClick={() => openEditStep(s)} title="Sửa"><Pencil size={14} /></button>
+                    <button className="btn-icon" onClick={() => deleteStep(s.id)} title="Xóa"><Trash2 size={14} /></button>
                   </div>
                 </div>
               ))}</div>}
@@ -453,14 +454,14 @@ export default function LessonEditorPage() {
               </div>
             ) : (
               <>
-                <div className="tab-header"><h2>📝 {quiz.title} ({quiz.questions?.length || 0} câu hỏi)</h2>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowQModal(true)}>＋ Thêm câu hỏi</button></div>
+                <div className="tab-header"><h2><FileText size={18} style={{display:'inline', verticalAlign:'middle', marginRight:6}} /> {quiz.title} ({quiz.questions?.length || 0} câu hỏi)</h2>
+                  <button className="btn btn-primary btn-sm" onClick={() => setShowQModal(true)}><Plus size={14} /> Thêm câu hỏi</button></div>
                 {quiz.questions?.length === 0 ? <div className="empty-state"><p className="empty-state-text">Chưa có câu hỏi</p></div> :
                   <div className="questions-list">{quiz.questions.map((q, qi) => (
                     <div key={q.id} className="question-card">
                       <div className="question-header">
                         <span className="question-num">Câu {qi+1}</span>
-                        <button className="btn-icon" onClick={() => deleteQuestion(q.id)} title="Xóa">🗑️</button>
+                        <button className="btn-icon" onClick={() => deleteQuestion(q.id)} title="Xóa"><Trash2 size={14} /></button>
                       </div>
                       <p className="question-text">{q.question}</p>
                       <div className="answers-grid">{q.answers?.map((a, ai) => (
@@ -483,7 +484,7 @@ export default function LessonEditorPage() {
             <h2 className="publish-title">Kiểm tra trước khi xuất bản</h2>
             <div className="publish-checklist">{checks.map((c, i) => (
               <div key={i} className={`check-item ${c.ok ? 'check-ok' : 'check-missing'}`}>
-                <span className="check-icon">{c.ok ? '✅' : '⚠️'}</span>
+                <span className="check-icon">{c.ok ? <CheckCircle2 size={18} color="var(--success)" /> : <AlertTriangle size={18} color="var(--warning)" />}</span>
                 <span>{c.label}</span>
                 <span className="check-status">{c.ok ? 'Hoàn thành' : 'Thiếu'}</span>
               </div>
@@ -495,14 +496,14 @@ export default function LessonEditorPage() {
                 <div><strong>Markers:</strong> {markers.length} ({markers.filter(m => m.active !== false).length} active)</div>
                 <div><strong>Steps:</strong> {steps.length}</div>
                 <div><strong>Quiz:</strong> {quiz ? `${quiz.questions?.length || 0} câu` : 'Chưa có'}</div>
-                <div><strong>Preview:</strong> {markers.some(m => m.previewModelCode) ? '✅' : '—'}</div>
+                <div><strong>Preview:</strong> {markers.some(m => m.previewModelCode) ? <CheckCircle2 size={14} color="var(--success)" /> : '—'}</div>
                 <div><strong>Trạng thái:</strong> {lesson.status}</div>
               </div>
             </div>
             <div className="publish-actions">
               {lesson.status !== 'PUBLISH' ?
-                <button className="btn btn-primary btn-lg" onClick={() => handlePublish('PUBLISH')}>🚀 Xuất bản bài học</button> :
-                <button className="btn btn-danger btn-lg" onClick={() => handlePublish('DRAFT')}>📝 Chuyển về nháp</button>}
+                <button className="btn btn-primary btn-lg" onClick={() => handlePublish('PUBLISH')}><Rocket size={16} /> Xuất bản bài học</button> :
+                <button className="btn btn-danger btn-lg" onClick={() => handlePublish('DRAFT')}><FileText size={16} /> Chuyển về nháp</button>}
             </div>
           </div>
         )}
@@ -511,6 +512,7 @@ export default function LessonEditorPage() {
       {/* ===== MODALS ===== */}
       <Modal isOpen={showMarkerModal} onClose={() => { setShowMarkerModal(false); setEditingMarker(null); }} title={editingMarker ? 'Sửa Marker' : 'Thêm Marker'} size="md">
         <form onSubmit={saveMarker}>
+          {/* Step 1: Select marker-model */}
           <div className="form-group">
             <label className="form-label">Chọn bộ Marker-Model từ hệ thống *</label>
             {selectedMarkerModel ? (
@@ -540,25 +542,55 @@ export default function LessonEditorPage() {
               </div>
             )}
           </div>
-          <div className="form-grid">
-            <div className="form-group"><label className="form-label">Mã Marker</label>
-              <input className="form-input" value={markerForm.markerCode} disabled /></div>
-            <div className="form-group"><label className="form-label">Trạng thái</label>
-              <label className="toggle-label"><input type="checkbox" checked={markerForm.active} onChange={e => setMarkerForm({...markerForm, active: e.target.checked})} /> <span>{markerForm.active ? '🟢 Active' : '🔴 Inactive'}</span></label></div>
-          </div>
-          <div className="form-group"><label className="form-label">Ảnh Marker</label>
-            {markerForm.imageUrl && <img src={markerForm.imageUrl.startsWith('/') ? `http://localhost:8080${markerForm.imageUrl}` : markerForm.imageUrl} alt="" className="thumb-preview" style={{marginBottom:8}} />}
-            <input className="form-input" value={markerForm.imageUrl} disabled /></div>
-          <div className="form-group"><label className="form-label">Preview Model Code</label>
-            <input className="form-input" value={markerForm.previewModelCode} disabled /></div>
-          <div className="form-group"><label className="form-label">Preview Audio (optional)</label>
-            <div className="audio-upload-area">
-              {markerForm.previewAudioUrl && <audio controls src={markerForm.previewAudioUrl.startsWith('/') ? `http://localhost:8080${markerForm.previewAudioUrl}` : markerForm.previewAudioUrl} className="audio-player" />}
-              <label className="btn btn-secondary btn-sm"><span>🎵 Upload audio</span><input type="file" accept="audio/*" onChange={handleMarkerAudioUpload} hidden /></label>
-              <input className="form-input" placeholder="Hoặc nhập URL" value={markerForm.previewAudioUrl} onChange={e => setMarkerForm({...markerForm, previewAudioUrl: e.target.value})} />
-            </div></div>
+
+          {/* Step 2: Auto-populated info from selected model */}
+          {(selectedMarkerModel || editingMarker) && (
+            <div className="marker-info-card">
+              <div className="marker-info-header">Thông tin Marker (tự động từ model đã chọn)</div>
+              <div className="marker-info-grid">
+                <div className="marker-info-item">
+                  <span className="marker-info-label">Mã Marker</span>
+                  <span className="marker-info-value">{markerForm.markerCode || '—'}</span>
+                </div>
+                <div className="marker-info-item">
+                  <span className="marker-info-label">Model Code</span>
+                  <span className="marker-info-value">{markerForm.previewModelCode || '—'}</span>
+                </div>
+              </div>
+              {(selectedMarkerModel?.imageUrl || markerForm.imageUrl) && (
+                <div className="marker-info-image">
+                  <span className="marker-info-label">Ảnh Marker</span>
+                  <img src={selectedMarkerModel?.imageUrl || fullUrl(markerForm.imageUrl)} alt="" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Editable fields */}
+          {(selectedMarkerModel || editingMarker) && (
+            <div className="marker-editable-section">
+              <div className="form-group">
+                <label className="form-label">Trạng thái</label>
+                <button type="button" className={`marker-toggle ${markerForm.active ? 'marker-toggle-on' : ''}`} onClick={() => setMarkerForm({...markerForm, active: !markerForm.active})}>
+                  <span className="marker-toggle-track">
+                    <span className="marker-toggle-thumb"></span>
+                  </span>
+                  <span className="marker-toggle-text">{markerForm.active ? 'Active' : 'Inactive'}</span>
+                </button>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Preview Audio (tuỳ chọn)</label>
+                <div className="audio-upload-area">
+                  {markerForm.previewAudioUrl && <audio controls src={markerForm.previewAudioUrl.startsWith('/') ? `http://localhost:8080${markerForm.previewAudioUrl}` : markerForm.previewAudioUrl} className="audio-player" />}
+                  <label className="btn btn-secondary btn-sm"><span><Music size={12} /> Upload audio</span><input type="file" accept="audio/*" onChange={handleMarkerAudioUpload} hidden /></label>
+                  <input className="form-input" placeholder="Hoặc nhập URL" value={markerForm.previewAudioUrl} onChange={e => setMarkerForm({...markerForm, previewAudioUrl: e.target.value})} />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => { setShowMarkerModal(false); setEditingMarker(null); }}>Hủy</button>
-            <button type="submit" className="btn btn-primary">{editingMarker ? 'Cập nhật' : 'Tạo Marker'}</button></div>
+            <button type="submit" className="btn btn-primary" disabled={!selectedMarkerModel && !editingMarker}>{editingMarker ? 'Cập nhật' : 'Tạo Marker'}</button></div>
         </form>
       </Modal>
 
@@ -570,7 +602,7 @@ export default function LessonEditorPage() {
                 {STEP_TYPES.map(t => (
                   <button key={t.value} type="button" className={`step-type-btn ${stepForm.type === t.value ? 'active' : ''}`}
                     onClick={() => setStepForm({...stepForm, type: t.value, fileUrl:'', mediaUrls:[]})}>
-                    <span className="step-type-icon">{t.icon}</span>
+                    <span className="step-type-icon">{<t.icon size={16} />}</span>
                     <span>{t.label}</span>
                   </button>
                 ))}
@@ -592,7 +624,7 @@ export default function LessonEditorPage() {
                 <div className="video-upload-area">
                   {stepForm.fileUrl && <video controls src={fullUrl(stepForm.fileUrl)} className="video-preview-player" />}
                   <label className={`btn btn-secondary btn-sm ${uploading ? 'btn-disabled' : ''}`}>
-                    <span>{uploading ? 'Đang upload...' : '🎬 Upload video'}</span>
+                    <span>{uploading ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
                     <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={uploading} />
                   </label>
                 </div></div>
@@ -638,7 +670,7 @@ export default function LessonEditorPage() {
           <div className="form-group"><label className="form-label">Đáp án (chọn đáp án đúng)</label>
             {qForm.answers.map((a, i) => (
               <div key={i} className="answer-input-row">
-                <button type="button" className={`answer-radio ${a.correct ? 'selected' : ''}`} onClick={() => setCorrectAnswer(i)}>{a.correct ? '●' : '○'}</button>
+                <button type="button" className={`answer-radio ${a.correct ? 'selected' : ''}`} onClick={() => setCorrectAnswer(i)}>{a.correct ? <CircleDot size={14} /> : <Circle size={14} />}</button>
                 <span className="answer-letter-input">{['A','B','C','D'][i]}</span>
                 <input className="form-input" placeholder={`Đáp án ${['A','B','C','D'][i]}`} value={a.answerText}
                   onChange={e => { const ans = [...qForm.answers]; ans[i] = {...ans[i], answerText: e.target.value}; setQForm({...qForm, answers: ans}); }} />

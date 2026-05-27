@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { authApi } from '../api/api';
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import { Users, ShieldCheck, BookOpenCheck, Plus, UserPlus } from 'lucide-react';
 import './UsersPage.css';
 
 export default function UsersPage() {
@@ -52,8 +53,8 @@ export default function UsersPage() {
 
   const getRoleBadge = (role) => {
     switch (role) {
-      case 'ADMIN': return <span className="badge badge-admin">🛡️ Admin</span>;
-      case 'TEACHER': return <span className="badge badge-teacher">📖 Giáo viên</span>;
+      case 'ADMIN': return <span className="badge badge-admin"><ShieldCheck size={12} /> Admin</span>;
+      case 'TEACHER': return <span className="badge badge-teacher"><BookOpenCheck size={12} /> Giáo viên</span>;
       default: return <span className="badge badge-draft">{role}</span>;
     }
   };
@@ -74,7 +75,7 @@ export default function UsersPage() {
     <div className="users-page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">👥 Quản lý tài khoản</h1>
+          <h1 className="page-title"><Users size={24} style={{display:'inline', verticalAlign:'middle', marginRight:8}} /> Quản lý tài khoản</h1>
           <p className="page-subtitle">Tạo và quản lý tài khoản giáo viên</p>
         </div>
         <button
@@ -82,7 +83,7 @@ export default function UsersPage() {
           onClick={() => setShowCreateModal(true)}
           id="btn-create-user"
         >
-          <span>＋</span>
+          <Plus size={16} />
           <span>Tạo tài khoản</span>
         </button>
       </div>
@@ -90,21 +91,21 @@ export default function UsersPage() {
       {/* Stats */}
       <div className="users-stats">
         <div className="stat-card">
-          <div className="stat-icon">👤</div>
+          <div className="stat-icon stat-icon-amber"><Users size={20} /></div>
           <div>
             <div className="stat-value">{users.length}</div>
             <div className="stat-label">Tổng tài khoản</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon">🛡️</div>
+          <div className="stat-icon stat-icon-green"><ShieldCheck size={20} /></div>
           <div>
             <div className="stat-value">{users.filter(u => u.role === 'ADMIN').length}</div>
             <div className="stat-label">Admin</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon">📖</div>
+          <div className="stat-icon stat-icon-purple"><BookOpenCheck size={20} /></div>
           <div>
             <div className="stat-value">{users.filter(u => u.role === 'TEACHER').length}</div>
             <div className="stat-label">Giáo viên</div>
@@ -124,7 +125,7 @@ export default function UsersPage() {
             </div>
           ) : users.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">👥</div>
+              <div className="empty-state-icon"><Users size={40} /></div>
               <p className="empty-state-text">Chưa có tài khoản nào</p>
             </div>
           ) : (
@@ -184,7 +185,7 @@ export default function UsersPage() {
             />
           </div>
           <div className="user-role-info">
-            <span className="badge badge-teacher">📖 Giáo viên</span>
+            <span className="badge badge-teacher"><BookOpenCheck size={12} /> Giáo viên</span>
             <span className="role-info-text">Tài khoản sẽ được tạo với vai trò Giáo viên</span>
           </div>
           <div className="modal-actions">

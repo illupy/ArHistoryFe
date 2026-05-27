@@ -1,0 +1,121 @@
+/* ============================================
+   Match3 Page Styles — Redesigned
+   ============================================ */
+
+.match3-page {
+  padding: 0;
+}
+
+.match3-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.match3-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: all var(--transition-base);
+}
+
+.match3-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+}
+
+.match3-card-images {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.match3-thumb {
+  width: 33.33%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.match3-card-note {
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.match3-note-label {
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-right: var(--space-sm);
+}
+
+.match3-note-text {
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+}
+
+.match3-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+/* Form */
+.match3-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.match3-form-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.match3-image-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.match3-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.match3-preview-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.match3-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+}
+
+.match3-note-input {
+  resize: vertical;
+  min-height: 60px;
+}

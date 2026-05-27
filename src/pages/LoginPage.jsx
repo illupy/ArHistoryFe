@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/api';
 import { showToast } from '../components/Toast';
+import { AlertTriangle } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -51,15 +53,14 @@ export default function LoginPage() {
       <div className="login-container animate-scale-in">
         <div className="login-card">
           <div className="login-header">
-            <div className="login-icon">⏳</div>
-            <h1 className="login-title">Histar</h1>
+            <div className="login-icon"><img src={logoImg} alt="Histar" style={{width:80, height:80, borderRadius:'50%'}} /></div>
             <p className="login-subtitle">Portal Quản Lý Học Liệu</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} id="login-form">
             {error && (
               <div className="login-error animate-fade-in">
-                <span>⚠️</span>
+                <span><AlertTriangle size={14} /></span>
                 <span>{error}</span>
               </div>
             )}

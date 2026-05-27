@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { lessonApi, markerApi, uploadApi, quizApi, gameApi } from '../api/api';
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import { Search, FileText, MapPin, Music, Upload, CheckCircle2, HelpCircle, Gamepad2, Dice3, ArrowLeft } from 'lucide-react';
 import './LessonDetailPage.css';
 
 export default function LessonDetailPage() {
@@ -99,9 +100,9 @@ export default function LessonDetailPage() {
   if (!lesson) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">🔍</div>
+        <div className="empty-state-icon"><Search size={40} /></div>
         <p className="empty-state-text">Không tìm thấy bài học</p>
-        <button className="btn btn-secondary" onClick={() => navigate('/lessons')}>← Quay lại</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/lessons')}><ArrowLeft size={14} /> Quay lại</button>
       </div>
     );
   }
@@ -110,7 +111,7 @@ export default function LessonDetailPage() {
     <div className="lesson-detail-page">
       <div className="detail-header">
         <button className="btn btn-secondary btn-sm" onClick={() => navigate('/lessons')}>
-          ← Quay lại
+          <ArrowLeft size={14} /> Quay lại
         </button>
       </div>
 
@@ -135,7 +136,7 @@ export default function LessonDetailPage() {
       {lesson.content && (
         <div className="card detail-section">
           <div className="card-header">
-            <h2 className="card-title">📄 Nội dung</h2>
+            <h2 className="card-title"><FileText size={16} style={{display:'inline', verticalAlign:'middle', marginRight:4}} /> Nội dung</h2>
           </div>
           <div className="card-body">
             <div className="detail-content">{lesson.content}</div>
@@ -147,14 +148,14 @@ export default function LessonDetailPage() {
       <div className="detail-actions-grid">
         {/* Create Marker */}
         <div className="action-card" onClick={() => setShowMarkerModal(true)}>
-          <div className="action-icon">📍</div>
+          <div className="action-icon"><MapPin size={24} /></div>
           <div className="action-title">Tạo Marker</div>
           <p className="action-desc">Gán marker AR cho bài học này</p>
         </div>
 
         {/* Upload Audio */}
         <label className="action-card" htmlFor="audio-upload">
-          <div className="action-icon">{uploading ? '⏳' : '🎵'}</div>
+          <div className="action-icon">{uploading ? <Upload size={24} className="spin" /> : <Music size={24} />}</div>
           <div className="action-title">{uploading ? 'Đang upload...' : 'Upload Audio'}</div>
           <p className="action-desc">Tải lên file audio cho bài học</p>
           <input
@@ -169,7 +170,7 @@ export default function LessonDetailPage() {
 
         {/* Quiz Info */}
         <div className="action-card action-card-info">
-          <div className="action-icon">{quiz ? '✅' : '❓'}</div>
+          <div className="action-icon">{quiz ? <CheckCircle2 size={24} color="var(--success)" /> : <HelpCircle size={24} />}</div>
           <div className="action-title">Quiz</div>
           <p className="action-desc">
             {quiz ? `${quiz.title || 'Quiz'} — ${quiz.questions?.length || 0} câu hỏi` : 'Chưa có quiz'}
@@ -178,7 +179,7 @@ export default function LessonDetailPage() {
 
         {/* Gamification Info */}
         <div className="action-card action-card-info">
-          <div className="action-icon">{game ? '🎮' : '🎲'}</div>
+          <div className="action-icon">{game ? <Gamepad2 size={24} /> : <Dice3 size={24} />}</div>
           <div className="action-title">Gamification</div>
           <p className="action-desc">
             {game ? `${game.title || 'Game'} — ${game.templateType}` : 'Chưa có game'}

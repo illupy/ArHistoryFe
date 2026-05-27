@@ -1,15 +1,42 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useFBX } from '@react-three/drei';
+import { OrbitControls, useFBX, Center } from '@react-three/drei';
+import * as THREE from 'three';
 import { useAuth } from '../context/AuthContext';
 import { markerModelApi, uploadApi } from '../api/api';
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import { Crosshair, Plus, Pencil, Trash2, Upload, Image, Package } from 'lucide-react';
 import './MarkerModelsPage.css';
 
 function FBXModel({ url }) {
   const fbx = useFBX(url);
-  return <primitive object={fbx} scale={0.01} />;
+
+  useMemo(() => {
+    // Ensure all meshes have a visible material if missing
+    fbx.traverse((child) => {
+      if (child.isMesh) {
+        if (!child.material || (Array.isArray(child.material) && child.material.length === 0)) {
+          child.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        }
+      }
+    });
+
+    // Auto-scale based on bounding box
+    const box = new THREE.Box3().setFromObject(fbx);
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim > 0) {
+      const scale = 2 / maxDim; // normalize to ~2 units
+      fbx.scale.setScalar(scale);
+    }
+
+    // Center the model
+    const center = box.getCenter(new THREE.Vector3());
+    fbx.position.sub(center.multiplyScalar(fbx.scale.x));
+  }, [fbx]);
+
+  return <primitive object={fbx} />;
 }
 
 function ModelViewer({ url }) {
@@ -17,10 +44,13 @@ function ModelViewer({ url }) {
   return (
     <div className="model-viewer-container">
       <Canvas camera={{ position: [0, 2, 5], fov: 50 }}>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 5, 5]} intensity={0.8} />
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[5, 5, 5]} intensity={1} />
+        <directionalLight position={[-5, -5, -5]} intensity={0.3} />
         <Suspense fallback={null}>
-          <FBXModel url={url} />
+          <Center>
+            <FBXModel url={url} />
+          </Center>
         </Suspense>
         <OrbitControls enablePan enableZoom enableRotate />
         <gridHelper args={[10, 10]} />
@@ -128,11 +158,11 @@ export default function MarkerModelsPage() {
     <div className="marker-models-page animate-fade-in">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎯 Quản lý Marker</h1>
+          <h1 className="page-title"><Crosshair size={24} style={{display:'inline', verticalAlign:'middle', marginRight:8}} /> Quản lý Marker</h1>
           <p className="page-subtitle">Quản lý bộ Marker - Model 3D dùng cho bài học AR</p>
         </div>
         {isAdmin() && (
-          <button className="btn btn-primary" onClick={openAdd}>＋ Thêm marker-model</button>
+          <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Thêm marker-model</button>
         )}
       </div>
 
@@ -157,8 +187,8 @@ export default function MarkerModelsPage() {
               </div>
               {isAdmin() && (
                 <div className="mm-card-actions" onClick={e => e.stopPropagation()}>
-                  <button className="btn-icon" onClick={() => openEdit(item)} title="Sửa">✏️</button>
-                  <button className="btn-icon" onClick={() => handleDelete(item.id)} title="Xóa">🗑️</button>
+                  <button className="btn-icon" onClick={() => openEdit(item)} title="Sửa"><Pencil size={14} /></button>
+                  <button className="btn-icon" onClick={() => handleDelete(item.id)} title="Xóa"><Trash2 size={14} /></button>
                 </div>
               )}
             </div>
@@ -197,7 +227,7 @@ export default function MarkerModelsPage() {
             <div className="form-group">
               <label className="form-label">File Model 3D (.fbx) *</label>
               <label className="btn btn-secondary btn-sm upload-btn">
-                <span>{uploading ? 'Đang upload...' : '📦 Upload FBX'}</span>
+                <span>{uploading ? 'Đang upload...' : 'Upload FBX'}</span>
                 <input type="file" accept=".fbx" onChange={handleModelUpload} hidden disabled={uploading} />
               </label>
               {form.modelUrl && (
@@ -210,7 +240,7 @@ export default function MarkerModelsPage() {
             <div className="form-group">
               <label className="form-label">Ảnh Marker *</label>
               <label className="btn btn-secondary btn-sm upload-btn">
-                <span>{uploading ? 'Đang upload...' : '📷 Upload ảnh'}</span>
+                <span>{uploading ? 'Đang upload...' : 'Upload ảnh'}</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} hidden disabled={uploading} />
               </label>
               {form.imageUrl && <img src={form.imageUrl} alt="marker" className="mm-form-img-preview" />}

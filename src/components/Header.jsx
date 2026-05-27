@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, LogOut, BookOpenCheck } from 'lucide-react';
 import './Header.css';
 
 export default function Header() {
@@ -21,12 +22,18 @@ export default function Header() {
 
       <div className="header-right">
         <div className="header-role">
-          <span className={`badge badge-${user?.role?.toLowerCase()}`}>
-            {user?.role === 'ADMIN' ? '🛡️ Admin' : '📖 Giáo viên'}
-          </span>
+          {user?.role === 'ADMIN' ? (
+            <span className="badge badge-admin">
+              <ShieldCheck size={14} /> ADMIN
+            </span>
+          ) : (
+            <span className="badge badge-teacher">
+              <BookOpenCheck size={14} /> Giáo viên
+            </span>
+          )}
         </div>
         <button className="btn-logout" onClick={handleLogout} id="btn-logout">
-          <span>🚪</span>
+          <LogOut size={14} />
           <span>Đăng xuất</span>
         </button>
       </div>
