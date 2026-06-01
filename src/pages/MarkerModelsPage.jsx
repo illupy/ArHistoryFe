@@ -1,59 +1,98 @@
-import { useState, useEffect, Suspense, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useFBX, Center } from '@react-three/drei';
+import { useState, useEffect, Suspense, useMemo, useRef } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, useFBX, useGLTF, Center, Bounds, useBounds, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import { useAuth } from '../context/AuthContext';
 import { markerModelApi, uploadApi } from '../api/api';
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
-import { Crosshair, Plus, Pencil, Trash2, Upload, Image, Package } from 'lucide-react';
+import { Crosshair, Plus, Pencil, Trash2, Upload, Image, Package, Loader } from 'lucide-react';
 import './MarkerModelsPage.css';
 
 function FBXModel({ url }) {
   const fbx = useFBX(url);
 
   useMemo(() => {
-    // Ensure all meshes have a visible material if missing
     fbx.traverse((child) => {
       if (child.isMesh) {
         if (!child.material || (Array.isArray(child.material) && child.material.length === 0)) {
           child.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
         }
+        child.castShadow = true;
+        child.receiveShadow = true;
       }
     });
-
-    // Auto-scale based on bounding box
-    const box = new THREE.Box3().setFromObject(fbx);
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim > 0) {
-      const scale = 2 / maxDim; // normalize to ~2 units
-      fbx.scale.setScalar(scale);
-    }
-
-    // Center the model
-    const center = box.getCenter(new THREE.Vector3());
-    fbx.position.sub(center.multiplyScalar(fbx.scale.x));
   }, [fbx]);
 
   return <primitive object={fbx} />;
 }
 
+function GLBModel({ url }) {
+  const { scene } = useGLTF(url);
+
+  useMemo(() => {
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        if (!child.material || (Array.isArray(child.material) && child.material.length === 0)) {
+          child.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        }
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [scene]);
+
+  return <primitive object={scene} />;
+}
+
+function isGLB(url) {
+  return /\.glb(\?|$)/i.test(url) || /\.gltf(\?|$)/i.test(url);
+}
+
+/* Auto-fit camera to model once loaded */
+function AutoFit({ children }) {
+  const bounds = useBounds();
+  useEffect(() => {
+    bounds.refresh().clip().fit();
+  }, [children]);
+  return <>{children}</>;
+}
+
+function LoadingFallback() {
+  return (
+    <mesh>
+      <boxGeometry args={[0.5, 0.5, 0.5]} />
+      <meshStandardMaterial color="#ddd" wireframe />
+    </mesh>
+  );
+}
+
 function ModelViewer({ url }) {
   if (!url) return <div className="model-placeholder">Chưa có model 3D</div>;
+  const ModelComponent = isGLB(url) ? GLBModel : FBXModel;
   return (
     <div className="model-viewer-container">
-      <Canvas camera={{ position: [0, 2, 5], fov: 50 }}>
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 5, 5]} intensity={1} />
-        <directionalLight position={[-5, -5, -5]} intensity={0.3} />
-        <Suspense fallback={null}>
-          <Center>
-            <FBXModel url={url} />
-          </Center>
+      <Canvas camera={{ position: [0, 2, 5], fov: 45 }} shadows>
+        <color attach="background" args={['#e2e2e2']} />
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow />
+        <directionalLight position={[-3, -2, -3]} intensity={0.3} />
+        <hemisphereLight groundColor="#e0e0e0" intensity={0.4} />
+        <Suspense fallback={<LoadingFallback />}>
+          <Bounds fit clip observe margin={1.5}>
+            <AutoFit>
+              <Center>
+                <ModelComponent url={url} />
+              </Center>
+            </AutoFit>
+          </Bounds>
         </Suspense>
-        <OrbitControls enablePan enableZoom enableRotate />
-        <gridHelper args={[10, 10]} />
+        <OrbitControls enablePan enableZoom enableRotate makeDefault />
+        {/* Subtle ground shadow plane */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+          <planeGeometry args={[50, 50]} />
+          <shadowMaterial transparent opacity={0.15} />
+        </mesh>
       </Canvas>
     </div>
   );
@@ -127,8 +166,9 @@ export default function MarkerModelsPage() {
   const handleModelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.fbx')) {
-      showToast('Chỉ chấp nhận file định dạng .fbx', 'warning');
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.fbx') && !name.endsWith('.glb') && !name.endsWith('.gltf')) {
+      showToast('Chỉ chấp nhận file .fbx, .glb hoặc .gltf', 'warning');
       return;
     }
     setUploading(true);
@@ -174,16 +214,17 @@ export default function MarkerModelsPage() {
         <div className="marker-model-grid">
           {items.map(item => (
             <div key={item.id} className="marker-model-card" onClick={() => setPreviewItem(item)}>
-              <div className="mm-card-model">
-                <ModelViewer url={item.modelUrl} />
-              </div>
-              <div className="mm-card-image">
-                {item.imageUrl && <img src={item.imageUrl} alt={item.markerCode} />}
+              <div className="mm-card-thumbnail">
+                {item.imageUrl
+                  ? <img src={item.imageUrl} alt={item.markerCode} />
+                  : <div className="mm-card-no-image"><Package size={32} /><span>Chưa có ảnh</span></div>
+                }
               </div>
               <div className="mm-card-info">
                 <strong className="mm-card-code">{item.markerCode}</strong>
                 {item.previewModelCode && <span className="mm-card-preview-code">Preview: {item.previewModelCode}</span>}
                 <span className="mm-card-meta">Tạo bởi: {item.createdBy} — {item.createdAt?.substring(0, 10)}</span>
+                {item.modelUrl && <span className="mm-card-model-badge"><Package size={12} /> Model 3D</span>}
               </div>
               {isAdmin() && (
                 <div className="mm-card-actions" onClick={e => e.stopPropagation()}>
@@ -225,10 +266,10 @@ export default function MarkerModelsPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">File Model 3D (.fbx) *</label>
+              <label className="form-label">File Model 3D (.fbx / .glb) *</label>
               <label className="btn btn-secondary btn-sm upload-btn">
-                <span>{uploading ? 'Đang upload...' : 'Upload FBX'}</span>
-                <input type="file" accept=".fbx" onChange={handleModelUpload} hidden disabled={uploading} />
+                <span>{uploading ? 'Đang upload...' : 'Upload Model'}</span>
+                <input type="file" accept=".fbx,.glb,.gltf" onChange={handleModelUpload} hidden disabled={uploading} />
               </label>
               {form.modelUrl && (
                 <div className="mm-form-model-preview">

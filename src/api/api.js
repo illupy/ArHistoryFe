@@ -115,7 +115,7 @@ const uploadDirect = async (file, subDir) => {
   // 2. PUT file directly to Supabase Storage (no auth header needed — URL is signed)
   const putRes = await fetch(signedUrl, {
     method: 'PUT',
-    headers: { 'Content-Type': contentType },
+    headers: { 'Content-Type': contentType, 'x-upsert': 'true' },
     body: file,
   });
 

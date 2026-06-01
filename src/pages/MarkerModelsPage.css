@@ -29,26 +29,36 @@
   border-color: var(--accent-primary);
 }
 
-.mm-card-model {
-  height: 200px;
-  background: #151515;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.mm-card-image {
-  height: 90px;
+.mm-card-thumbnail {
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--space-sm);
   background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
 }
 
-.mm-card-image img {
+.mm-card-thumbnail img {
   max-height: 100%;
   max-width: 100%;
   object-fit: contain;
   border-radius: var(--radius-sm);
+  transition: transform var(--transition-base);
+}
+
+.marker-model-card:hover .mm-card-thumbnail img {
+  transform: scale(1.05);
+}
+
+.mm-card-no-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
 }
 
 .mm-card-info {
@@ -71,6 +81,19 @@
 .mm-card-meta {
   font-size: var(--fs-xs);
   color: var(--text-tertiary);
+}
+
+.mm-card-model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--accent-secondary, #10b981);
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+  margin-top: 2px;
 }
 
 .mm-card-actions {
@@ -102,7 +125,7 @@
   justify-content: center;
   color: var(--text-tertiary);
   font-size: var(--fs-sm);
-  background: #151515;
+  background: #e2e2e2;
 }
 
 /* Preview Modal */
@@ -113,10 +136,11 @@
 }
 
 .mm-preview-model {
-  height: 350px;
-  background: #151515;
+  height: 400px;
+  background: #e2e2e2;
   border-radius: var(--radius-md);
   overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .mm-preview-image {
@@ -155,11 +179,12 @@
 }
 
 .mm-form-model-preview {
-  height: 200px;
-  background: #151515;
+  height: 250px;
+  background: #f0f0f0;
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-top: var(--space-sm);
+  border: 1px solid var(--border-color);
 }
 
 .mm-form-img-preview {
