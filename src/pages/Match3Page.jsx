@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { match3Api, uploadApi } from '../api/api';
 import { showToast } from '../components/Toast';
+import UploadProgressBar from '../components/UploadProgressBar';
 import Modal from '../components/Modal';
 import { Puzzle, Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import './Match3Page.css';
@@ -12,6 +13,7 @@ export default function Match3Page() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ imageUrl1: '', imageUrl2: '', imageUrl3: '', note: '' });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -79,12 +81,13 @@ export default function Match3Page() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadImage(file);
+      const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, [field]: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload ảnh thất bại', 'error'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); setUploadProgress(0); }
   };
 
   if (loading) return <div className="loading-container"><div className="spinner spinner-lg"></div></div>;
@@ -142,6 +145,7 @@ export default function Match3Page() {
                     <span>{uploading ? 'Đang upload...' : 'Upload'}</span>
                     <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e, field)} disabled={uploading} />
                   </label>
+                  {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
                 </div>
               </div>
             ))}

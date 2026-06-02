@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useAuth } from '../context/AuthContext';
 import { markerModelApi, uploadApi } from '../api/api';
 import { showToast } from '../components/Toast';
+import UploadProgressBar from '../components/UploadProgressBar';
 import Modal from '../components/Modal';
 import { Crosshair, Plus, Pencil, Trash2, Upload, Image, Package, Loader } from 'lucide-react';
 import './MarkerModelsPage.css';
@@ -106,6 +107,7 @@ export default function MarkerModelsPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ markerCode: '', modelUrl: '', imageUrl: '', previewModelCode: '' });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [previewItem, setPreviewItem] = useState(null);
 
   useEffect(() => { fetchAll(); }, []);
@@ -172,24 +174,26 @@ export default function MarkerModelsPage() {
       return;
     }
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadModel(file);
+      const res = await uploadApi.uploadModel(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, modelUrl: res.data.data }));
       showToast('Upload model thành công', 'success');
     } catch { showToast('Upload model thất bại', 'error'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); setUploadProgress(0); }
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadImage(file);
+      const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, imageUrl: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload ảnh thất bại', 'error'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); setUploadProgress(0); }
   };
 
   if (loading) return <div className="loading-container"><div className="spinner spinner-lg"></div></div>;
@@ -271,6 +275,7 @@ export default function MarkerModelsPage() {
                 <span>{uploading ? 'Đang upload...' : 'Upload Model'}</span>
                 <input type="file" accept=".fbx,.glb,.gltf" onChange={handleModelUpload} hidden disabled={uploading} />
               </label>
+              {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload model..." />}
               {form.modelUrl && (
                 <div className="mm-form-model-preview">
                   <ModelViewer url={form.modelUrl} />
@@ -284,6 +289,7 @@ export default function MarkerModelsPage() {
                 <span>{uploading ? 'Đang upload...' : 'Upload ảnh'}</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} hidden disabled={uploading} />
               </label>
+              {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
               {form.imageUrl && <img src={form.imageUrl} alt="marker" className="mm-form-img-preview" />}
             </div>
 

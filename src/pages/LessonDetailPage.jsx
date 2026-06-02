@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lessonApi, markerApi, uploadApi, quizApi, gameApi } from '../api/api';
 import { showToast } from '../components/Toast';
+import UploadProgressBar from '../components/UploadProgressBar';
 import Modal from '../components/Modal';
 import { Search, FileText, MapPin, Music, Upload, CheckCircle2, HelpCircle, Gamepad2, Dice3, ArrowLeft } from 'lucide-react';
 import './LessonDetailPage.css';
@@ -21,6 +22,7 @@ export default function LessonDetailPage() {
 
   // Audio upload
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchLesson();
@@ -79,13 +81,15 @@ export default function LessonDetailPage() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadAudio(file);
+      const res = await uploadApi.uploadAudio(file, (pct) => setUploadProgress(pct));
       showToast(`Upload thành công: ${res.data.data}`, 'success');
     } catch (err) {
       showToast(err.response?.data?.message || 'Upload thất bại', 'error');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -166,6 +170,7 @@ export default function LessonDetailPage() {
             disabled={uploading}
             hidden
           />
+          {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload audio..." />}
         </label>
 
         {/* Quiz Info */}

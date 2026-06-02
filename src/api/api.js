@@ -80,7 +80,17 @@ export const markerModelApi = {
   delete: (id) => api.delete(`/api/marker-models/${id}`),
 };
 
-// ========== Uploads — FE uploads directly to Supabase via presigned URL ==========
+// ========== Uploads — Hybrid: TUS for large files, presigned PUT for small files ==========
+
+import * as tus from 'tus-js-client';
+
+// Direct storage hostname for optimal upload performance
+const SUPABASE_PROJECT_ID = 'gfualrlzqenuressyeli';
+const SUPABASE_TUS_ENDPOINT = `https://${SUPABASE_PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`;
+const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+
+// Threshold: files >= 6MB use TUS, smaller files use presigned PUT
+const TUS_THRESHOLD = 6 * 1024 * 1024;
 
 /** Detect MIME type từ file.type hoặc fallback từ extension */
 const detectContentType = (file) => {
@@ -101,40 +111,132 @@ const detectContentType = (file) => {
   return map[ext] || 'application/octet-stream';
 };
 
-const uploadDirect = async (file, subDir) => {
+/**
+ * Get presign data from backend (token, publicUrl, bucketName, objectName).
+ */
+const getPresignData = async (file, subDir) => {
   const contentType = detectContentType(file);
-
-  // 1. Get presigned URL from backend (backend uses service-role key to sign)
   const { data: presignRes } = await api.post('/api/uploads/presign', {
     subDir,
     filename: file.name,
     contentType,
   });
-  const { signedUrl, publicUrl } = presignRes.data;
+  return { ...presignRes.data, contentType };
+};
 
-  // 2. PUT file directly to Supabase Storage (no auth header needed — URL is signed)
-  const putRes = await fetch(signedUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': contentType, 'x-upsert': 'true' },
-    body: file,
+/**
+ * Small-file upload via presigned PUT URL (with progress via XMLHttpRequest).
+ */
+const uploadPresignedPut = (file, subDir, onProgress) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { signedUrl, publicUrl, contentType } = await getPresignData(file, subDir);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', signedUrl, true);
+      xhr.setRequestHeader('Content-Type', contentType);
+      xhr.setRequestHeader('x-upsert', 'true');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Number(((e.loaded / e.total) * 100).toFixed(2)));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ data: { data: publicUrl } });
+        } else {
+          reject(new Error(`Upload lên Supabase thất bại (${xhr.status}): ${xhr.responseText}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error khi upload'));
+      xhr.send(file);
+    } catch (err) {
+      reject(err);
+    }
   });
+};
 
-  if (!putRes.ok) {
-    const text = await putRes.text();
-    throw new Error(`Upload lên Supabase thất bại (${putRes.status}): ${text}`);
+/**
+ * Large-file upload via TUS resumable protocol.
+ * Uses signed upload token (x-signature header) — no auth header needed.
+ */
+const uploadWithTus = (file, subDir, onProgress) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { token, publicUrl, bucketName, objectName, contentType } = await getPresignData(file, subDir);
+
+      const upload = new tus.Upload(file, {
+        endpoint: SUPABASE_TUS_ENDPOINT,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'x-upsert': 'true',
+        },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        metadata: {
+          bucketName: bucketName,
+          objectName: objectName,
+          contentType: contentType,
+          cacheControl: '3600',
+        },
+        chunkSize: 6 * 1024 * 1024, // Must be 6MB for Supabase
+        onError: (error) => {
+          console.error('TUS upload failed:', error);
+          reject(error);
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percentage = Number(((bytesUploaded / bytesTotal) * 100).toFixed(2));
+          if (onProgress) onProgress(percentage);
+        },
+        onSuccess: () => {
+          resolve({ data: { data: publicUrl } });
+        },
+      });
+
+      // Resume from previous upload if available
+      upload.findPreviousUploads().then((previousUploads) => {
+        if (previousUploads.length) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+        }
+        upload.start();
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+/**
+ * Smart upload: picks TUS for large files, presigned PUT for small files.
+ * Both support onProgress(percentage) callback.
+ */
+const smartUpload = (file, subDir, onProgress) => {
+  if (file.size >= TUS_THRESHOLD) {
+    return uploadWithTus(file, subDir, onProgress);
   }
-
-  // 3. Return publicUrl in the same shape as before so pages need no changes
-  return { data: { data: publicUrl } };
+  return uploadPresignedPut(file, subDir, onProgress);
 };
 
 export const uploadApi = {
-  uploadImage:       (file)  => uploadDirect(file, 'images'),
-  uploadAudio:       (file)  => uploadDirect(file, 'audio'),
-  uploadVideo:       (file)  => uploadDirect(file, 'videos'),
-  uploadModel:       (file)  => uploadDirect(file, 'models'),
-  uploadMultiImages: async (files) => {
-    const urls = await Promise.all([...files].map(f => uploadDirect(f, 'images').then(r => r.data.data)));
+  uploadImage:       (file, onProgress)  => smartUpload(file, 'images', onProgress),
+  uploadAudio:       (file, onProgress)  => smartUpload(file, 'audio', onProgress),
+  uploadVideo:       (file, onProgress)  => smartUpload(file, 'videos', onProgress),
+  uploadModel:       (file, onProgress)  => smartUpload(file, 'models', onProgress),
+  uploadMultiImages: async (files, onProgress) => {
+    let completed = 0;
+    const total = [...files].length;
+    const urls = await Promise.all([...files].map(f =>
+      smartUpload(f, 'images', (pct) => {
+        if (onProgress) onProgress(((completed + pct / 100) / total) * 100);
+      }).then(r => {
+        completed++;
+        return r.data.data;
+      })
+    ));
     return { data: { data: urls } };
   },
 };

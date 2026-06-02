@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lessonApi, markerApi, assetApi, quizApi, uploadApi, markerModelApi } from '../api/api';
 import { showToast } from '../components/Toast';
+import UploadProgressBar from '../components/UploadProgressBar';
 import Modal from '../components/Modal';
 import RichTextEditor from '../components/RichTextEditor';
 import { ClipboardList, MapPin, FileText, HelpCircle, Rocket, Type, Video, Images, ArrowLeft, Plus, Pencil, Trash2, Save, Upload, Music, CircleDot, Circle, CheckCircle2, AlertTriangle, Gamepad2, ToggleLeft, ToggleRight, Image as ImageIcon } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function LessonEditorPage() {
   const [showStepModal, setShowStepModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Quiz
   const [quiz, setQuiz] = useState(null);
@@ -104,12 +106,14 @@ export default function LessonEditorPage() {
   const handleThumbUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadImage(file);
+      const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       const url = res.data.data;
       setForm(f => ({ ...f, thumbnailUrl: url }));
       showToast('Upload thumbnail thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
+    finally { setUploadProgress(0); }
   };
 
   // ===== Marker Edit/Delete =====
@@ -162,11 +166,13 @@ export default function LessonEditorPage() {
   const handleMarkerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadImage(file);
+      const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setMarkerForm(f => ({ ...f, imageUrl: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
+    finally { setUploadProgress(0); }
   };
 
   // ===== Steps Tab =====
@@ -213,12 +219,13 @@ export default function LessonEditorPage() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadVideo(file);
+      const res = await uploadApi.uploadVideo(file, (pct) => setUploadProgress(pct));
       setStepForm(f => ({ ...f, fileUrl: res.data.data }));
       showToast('Upload video thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); setUploadProgress(0); }
   };
 
   const handleGalleryUpload = async (e) => {
@@ -227,12 +234,13 @@ export default function LessonEditorPage() {
     const remaining = 4 - (stepForm.mediaUrls?.length || 0);
     if (files.length > remaining) { showToast(`Chỉ được thêm tối đa ${remaining} ảnh nữa`, 'warning'); return; }
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadMultiImages(files);
+      const res = await uploadApi.uploadMultiImages(files, (pct) => setUploadProgress(pct));
       setStepForm(f => ({ ...f, mediaUrls: [...(f.mediaUrls||[]), ...res.data.data] }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); setUploadProgress(0); }
   };
 
   const removeGalleryImage = (idx) => {
@@ -316,11 +324,13 @@ export default function LessonEditorPage() {
   const handleMarkerAudioUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadProgress(0);
     try {
-      const res = await uploadApi.uploadAudio(file);
+      const res = await uploadApi.uploadAudio(file, (pct) => setUploadProgress(pct));
       setMarkerForm(f => ({ ...f, previewAudioUrl: res.data.data }));
       showToast('Upload audio thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
+    finally { setUploadProgress(0); }
   };
 
   const checks = [
@@ -360,6 +370,7 @@ export default function LessonEditorPage() {
                 <div className="thumb-upload-area">
                   {form.thumbnailUrl && <img src={form.thumbnailUrl.startsWith('/') ? `http://localhost:8080${form.thumbnailUrl}` : form.thumbnailUrl} alt="" className="thumb-preview" />}
                   <label className="btn btn-secondary btn-sm"><span><Upload size={12} /> Upload ảnh</span><input type="file" accept="image/*" onChange={handleThumbUpload} hidden /></label>
+                  {uploadProgress > 0 && <UploadProgressBar progress={uploadProgress} label="Đang upload thumbnail..." />}
                   <input className="form-input" placeholder="Hoặc nhập URL" value={form.thumbnailUrl} onChange={e => setForm({...form, thumbnailUrl: e.target.value})} />
                 </div>
               </div>
@@ -627,6 +638,7 @@ export default function LessonEditorPage() {
                     <span>{uploading ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
                     <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={uploading} />
                   </label>
+                  {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload video..." />}
                 </div></div>
               <div className="form-group"><label className="form-label">Mô tả / Caption</label>
                 <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={100} placeholder="Mô tả về video..." /></div>
