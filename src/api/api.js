@@ -36,6 +36,8 @@ export const authApi = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
   getUsers: () => api.get('/auth/users'),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
 };
 
 // ========== Dashboard ==========
@@ -136,6 +138,7 @@ const uploadPresignedPut = (file, subDir, onProgress) => {
       xhr.open('PUT', signedUrl, true);
       xhr.setRequestHeader('Content-Type', contentType);
       xhr.setRequestHeader('x-upsert', 'true');
+      xhr.setRequestHeader('cache-control', 'max-age=31536000');
 
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) {
@@ -181,7 +184,7 @@ const uploadWithTus = (file, subDir, onProgress) => {
           bucketName: bucketName,
           objectName: objectName,
           contentType: contentType,
-          cacheControl: '3600',
+          cacheControl: '31536000',
         },
         chunkSize: 6 * 1024 * 1024, // Must be 6MB for Supabase
         onError: (error) => {
@@ -248,6 +251,7 @@ export const quizApi = {
   create: (data) => api.post('/api/quizzes', data),
   addQuestion: (quizId, data) => api.post(`/api/quizzes/${quizId}/questions`, data),
   deleteQuestion: (questionId) => api.delete(`/api/quizzes/questions/${questionId}`),
+  delete: (quizId) => api.delete(`/api/quizzes/${quizId}`),
 };
 
 // ========== Gamification ==========

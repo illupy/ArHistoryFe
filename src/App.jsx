@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import ToastContainer from './components/Toast';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardLayout from './pages/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import LessonsPage from './pages/LessonsPage';
@@ -18,6 +20,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route
             path="/"
@@ -33,14 +37,7 @@ function App() {
             <Route path="lessons/:id/edit" element={<LessonEditorPage />} />
             <Route path="marker-models" element={<MarkerModelsPage />} />
             <Route path="match3" element={<Match3Page />} />
-            <Route
-              path="users"
-              element={
-                <AdminRoute>
-                  <UsersPage />
-                </AdminRoute>
-              }
-            />
+            <Route path="users" element={<UsersPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -140,7 +140,7 @@ export default function LessonsPage() {
             filtered.length === 0 ? <div className="empty-state"><div className="empty-state-icon"><BookOpen size={40} /></div><p className="empty-state-text">Không tìm thấy bài học</p></div> :
               <table className="data-table" id="lessons-table">
                 <thead><tr>
-                  <th style={{ width: '40px' }}>#</th><th>Tiêu đề</th><th>Marker</th><th>Trạng thái</th><th>Quiz</th><th>Game</th><th style={{ textAlign: 'right' }}>Thao tác</th>
+                  <th style={{ width: '40px' }}>#</th><th>Tiêu đề</th><th>Marker</th><th>Trạng thái</th><th>Quiz</th><th style={{ textAlign: 'right' }}>Thao tác</th>
                 </tr></thead>
                 <tbody>{paginatedItems.map((l, i) => (
                   <tr key={l.id} className="animate-fade-in" style={{ animationDelay: `${i * 0.03}s` }}>
@@ -152,7 +152,6 @@ export default function LessonsPage() {
                     <td>{l.markerCode ? <span className="badge badge-publish">{l.markerCode}</span> : <span style={{ color: 'var(--text-tertiary)' }}>—</span>}</td>
                     <td><span className={`badge badge-${l.status?.toLowerCase()}`}>{l.status === 'PUBLISH' ? <><span className="badge-dot badge-dot-green"></span> PUBLISHED</> : 'DRAFT'}</span></td>
                     <td>{l.hasQuiz ? <CheckCircle2 size={18} color="var(--success)" /> : <span style={{ color: 'var(--text-tertiary)' }}>—</span>}</td>
-                    <td>{l.hasGamification ? <CheckCircle2 size={18} color="var(--success)" /> : <span style={{ color: 'var(--text-tertiary)' }}>—</span>}</td>
                     <td style={{ textAlign: 'right' }}>
                       <div className="action-btns">
                         <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/lessons/${l.id}/edit`)}><Pencil size={12} /> Sửa</button>

@@ -178,6 +178,11 @@
   margin-bottom: var(--space-sm);
 }
 
+.mm-form .upload-btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .mm-form-model-preview {
   height: 250px;
   background: #f0f0f0;

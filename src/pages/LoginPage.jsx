@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/api';
 import { showToast } from '../components/Toast';
@@ -112,6 +112,7 @@ export default function LoginPage() {
           </form>
 
           <div className="login-footer">
+            <Link to="/forgot-password" className="forgot-password-link">Quên mật khẩu?</Link>
             <p>Hệ thống dành cho giáo viên được cấp tài khoản</p>
           </div>
         </div>

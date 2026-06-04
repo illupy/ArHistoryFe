@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { authApi } from '../api/api';
+import { useAuth } from '../context/AuthContext';
 import { showToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import { Users, ShieldCheck, BookOpenCheck, Plus, UserPlus } from 'lucide-react';
 import './UsersPage.css';
 
 export default function UsersPage() {
+  const { user: currentUser, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -75,20 +77,23 @@ export default function UsersPage() {
     <div className="users-page">
       <div className="page-header">
         <div>
-          <h1 className="page-title"><Users size={24} style={{display:'inline', verticalAlign:'middle', marginRight:8}} /> Quản lý tài khoản</h1>
-          <p className="page-subtitle">Tạo và quản lý tài khoản giáo viên</p>
+          <h1 className="page-title"><Users size={24} style={{display:'inline', verticalAlign:'middle', marginRight:8}} /> {isAdmin() ? 'Quản lý tài khoản' : 'Tài khoản của tôi'}</h1>
+          <p className="page-subtitle">{isAdmin() ? 'Tạo và quản lý tài khoản giáo viên' : 'Thông tin tài khoản'}</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
-          id="btn-create-user"
-        >
-          <Plus size={16} />
-          <span>Tạo tài khoản</span>
-        </button>
+        {isAdmin() && (
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowCreateModal(true)}
+            id="btn-create-user"
+          >
+            <Plus size={16} />
+            <span>Tạo tài khoản</span>
+          </button>
+        )}
       </div>
 
-      {/* Stats */}
+      {/* Stats - Admin only */}
+      {isAdmin() && (
       <div className="users-stats">
         <div className="stat-card">
           <div className="stat-icon stat-icon-amber"><Users size={20} /></div>
@@ -112,6 +117,7 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Table */}
       <div className="card">

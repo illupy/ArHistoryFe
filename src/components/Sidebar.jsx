@@ -51,15 +51,13 @@ export default function Sidebar() {
           </NavLink>
         </div>
 
-        {isAdmin() && (
-          <div className="nav-section">
-            {!collapsed && <span className="nav-section-title">Quản trị</span>}
-            <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title="Tài khoản">
-              <span className="nav-icon"><Users size={18} /></span>
-              {!collapsed && <span>Tài khoản</span>}
-            </NavLink>
-          </div>
-        )}
+        <div className="nav-section">
+          {!collapsed && <span className="nav-section-title">Quản trị</span>}
+          <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title="Tài khoản">
+            <span className="nav-icon"><Users size={18} /></span>
+            {!collapsed && <span>Tài khoản</span>}
+          </NavLink>
+        </div>
       </nav>
 
       <div className="sidebar-footer">

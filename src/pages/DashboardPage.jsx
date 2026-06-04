@@ -41,7 +41,6 @@ export default function DashboardPage() {
     { icon: <FileEdit size={20} />, value: stats?.draftLessons || 0, label: 'Bản nháp', color: 'var(--text-tertiary)' },
     { icon: <MapPin size={20} />, value: stats?.totalMarkers || 0, label: 'Markers', color: '#8B5CF6' },
     { icon: <HelpCircle size={20} />, value: stats?.totalQuizzes || 0, label: 'Quizzes', color: 'var(--info)' },
-    { icon: <Gamepad2 size={20} />, value: stats?.totalGames || 0, label: 'Games', color: '#EC4899' },
   ];
 
   return (

@@ -12,7 +12,7 @@ export default function Match3Page() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ imageUrl1: '', imageUrl2: '', imageUrl3: '', note: '' });
-  const [uploading, setUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => { fetchAll(); }, []);
@@ -80,14 +80,14 @@ export default function Match3Page() {
   const handleImageUpload = async (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingField(field);
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, [field]: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload ảnh thất bại', 'error'); }
-    finally { setUploading(false); setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   if (loading) return <div className="loading-container"><div className="spinner spinner-lg"></div></div>;
@@ -132,23 +132,26 @@ export default function Match3Page() {
       <Modal isOpen={showModal} title={editing ? 'Sửa bộ 3 ảnh' : 'Thêm bộ 3 ảnh'} onClose={() => setShowModal(false)} size="lg">
         <form onSubmit={handleSave} className="match3-form">
           <div className="match3-form-images">
-            {['imageUrl1', 'imageUrl2', 'imageUrl3'].map((field, idx) => (
-              <div key={field} className="form-group match3-image-group">
-                <label className="form-label">Ảnh {idx + 1} *</label>
-                <div className="match3-image-upload">
-                  {form[field] ? (
-                    <img src={form[field]} alt={`Ảnh ${idx + 1}`} className="match3-preview-img" />
-                  ) : (
-                    <div className="match3-placeholder">Chưa có ảnh</div>
-                  )}
-                  <label className="btn btn-secondary btn-sm upload-btn">
-                    <span>{uploading ? 'Đang upload...' : 'Upload'}</span>
-                    <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e, field)} disabled={uploading} />
-                  </label>
-                  {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
+            {['imageUrl1', 'imageUrl2', 'imageUrl3'].map((field, idx) => {
+              const isUploadingThis = uploadingField === field;
+              return (
+                <div key={field} className="form-group match3-image-group">
+                  <label className="form-label">Ảnh {idx + 1} *</label>
+                  <div className="match3-image-upload">
+                    {form[field] ? (
+                      <img src={form[field]} alt={`Ảnh ${idx + 1}`} className="match3-preview-img" />
+                    ) : (
+                      <div className="match3-placeholder">Chưa có ảnh</div>
+                    )}
+                    <label className={`btn btn-secondary btn-sm upload-btn ${uploadingField && !isUploadingThis ? 'upload-btn-disabled' : ''}`}>
+                      <span>{isUploadingThis ? 'Đang upload...' : 'Upload'}</span>
+                      <input type="file" accept="image/*" hidden onChange={e => handleImageUpload(e, field)} disabled={!!uploadingField} />
+                    </label>
+                    {isUploadingThis && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="form-group">
@@ -164,7 +167,7 @@ export default function Match3Page() {
 
           <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Hủy</button>
-            <button type="submit" className="btn btn-primary" disabled={uploading}>
+            <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>
               {editing ? 'Cập nhật' : 'Tạo mới'}
             </button>
           </div>

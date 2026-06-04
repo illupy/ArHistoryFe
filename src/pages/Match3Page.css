@@ -94,6 +94,11 @@
   width: 100%;
 }
 
+.match3-image-upload .upload-btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .match3-preview-img {
   width: 100%;
   aspect-ratio: 1;

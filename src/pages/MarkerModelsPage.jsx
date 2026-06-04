@@ -106,7 +106,7 @@ export default function MarkerModelsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ markerCode: '', modelUrl: '', imageUrl: '', previewModelCode: '' });
-  const [uploading, setUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewItem, setPreviewItem] = useState(null);
 
@@ -173,27 +173,27 @@ export default function MarkerModelsPage() {
       showToast('Chỉ chấp nhận file .fbx, .glb hoặc .gltf', 'warning');
       return;
     }
-    setUploading(true);
+    setUploadingField('model');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadModel(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, modelUrl: res.data.data }));
       showToast('Upload model thành công', 'success');
     } catch { showToast('Upload model thất bại', 'error'); }
-    finally { setUploading(false); setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingField('image');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setForm(f => ({ ...f, imageUrl: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload ảnh thất bại', 'error'); }
-    finally { setUploading(false); setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   if (loading) return <div className="loading-container"><div className="spinner spinner-lg"></div></div>;
@@ -271,11 +271,11 @@ export default function MarkerModelsPage() {
 
             <div className="form-group">
               <label className="form-label">File Model 3D (.fbx / .glb) *</label>
-              <label className="btn btn-secondary btn-sm upload-btn">
-                <span>{uploading ? 'Đang upload...' : 'Upload Model'}</span>
-                <input type="file" accept=".fbx,.glb,.gltf" onChange={handleModelUpload} hidden disabled={uploading} />
+              <label className={`btn btn-secondary btn-sm upload-btn ${uploadingField && uploadingField !== 'model' ? 'upload-btn-disabled' : ''}`}>
+                <span>{uploadingField === 'model' ? 'Đang upload...' : 'Upload Model'}</span>
+                <input type="file" accept=".fbx,.glb,.gltf" onChange={handleModelUpload} hidden disabled={!!uploadingField} />
               </label>
-              {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload model..." />}
+              {uploadingField === 'model' && <UploadProgressBar progress={uploadProgress} label="Đang upload model..." />}
               {form.modelUrl && (
                 <div className="mm-form-model-preview">
                   <ModelViewer url={form.modelUrl} />
@@ -285,11 +285,11 @@ export default function MarkerModelsPage() {
 
             <div className="form-group">
               <label className="form-label">Ảnh Marker *</label>
-              <label className="btn btn-secondary btn-sm upload-btn">
-                <span>{uploading ? 'Đang upload...' : 'Upload ảnh'}</span>
-                <input type="file" accept="image/*" onChange={handleImageUpload} hidden disabled={uploading} />
+              <label className={`btn btn-secondary btn-sm upload-btn ${uploadingField && uploadingField !== 'image' ? 'upload-btn-disabled' : ''}`}>
+                <span>{uploadingField === 'image' ? 'Đang upload...' : 'Upload ảnh'}</span>
+                <input type="file" accept="image/*" onChange={handleImageUpload} hidden disabled={!!uploadingField} />
               </label>
-              {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
+              {uploadingField === 'image' && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
               {form.imageUrl && <img src={form.imageUrl} alt="marker" className="mm-form-img-preview" />}
             </div>
 
@@ -300,7 +300,7 @@ export default function MarkerModelsPage() {
 
             <div className="form-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Hủy</button>
-              <button type="submit" className="btn btn-primary" disabled={uploading}>{editing ? 'Cập nhật' : 'Tạo mới'}</button>
+              <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>{editing ? 'Cập nhật' : 'Tạo mới'}</button>
             </div>
           </form>
       </Modal>

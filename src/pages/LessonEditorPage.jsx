@@ -47,7 +47,7 @@ export default function LessonEditorPage() {
   const [stepForm, setStepForm] = useState({ type:'TEXT', content:'', fileUrl:'', orderIndex:0, mediaUrls:[] });
   const [showStepModal, setShowStepModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Quiz
@@ -106,6 +106,7 @@ export default function LessonEditorPage() {
   const handleThumbUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadingField('thumbnail');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
@@ -113,7 +114,7 @@ export default function LessonEditorPage() {
       setForm(f => ({ ...f, thumbnailUrl: url }));
       showToast('Upload thumbnail thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   // ===== Marker Edit/Delete =====
@@ -166,13 +167,14 @@ export default function LessonEditorPage() {
   const handleMarkerImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadingField('marker-image');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
       setMarkerForm(f => ({ ...f, imageUrl: res.data.data }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   // ===== Steps Tab =====
@@ -218,14 +220,14 @@ export default function LessonEditorPage() {
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingField('step-video');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadVideo(file, (pct) => setUploadProgress(pct));
       setStepForm(f => ({ ...f, fileUrl: res.data.data }));
       showToast('Upload video thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploading(false); setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   const handleGalleryUpload = async (e) => {
@@ -233,14 +235,14 @@ export default function LessonEditorPage() {
     if (!files.length) return;
     const remaining = 4 - (stepForm.mediaUrls?.length || 0);
     if (files.length > remaining) { showToast(`Chỉ được thêm tối đa ${remaining} ảnh nữa`, 'warning'); return; }
-    setUploading(true);
+    setUploadingField('step-gallery');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadMultiImages(files, (pct) => setUploadProgress(pct));
       setStepForm(f => ({ ...f, mediaUrls: [...(f.mediaUrls||[]), ...res.data.data] }));
       showToast('Upload ảnh thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploading(false); setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   const removeGalleryImage = (idx) => {
@@ -285,6 +287,15 @@ export default function LessonEditorPage() {
     } catch { showToast('Xóa thất bại', 'error'); }
   };
 
+  const deleteQuiz = async () => {
+    if (!confirm('Xóa toàn bộ quiz và tất cả câu hỏi?')) return;
+    try {
+      await quizApi.delete(quiz.id);
+      showToast('Đã xóa quiz', 'success');
+      fetchAll();
+    } catch { showToast('Xóa thất bại', 'error'); }
+  };
+
   const setCorrectAnswer = (idx) => {
     setQForm(f => ({
       ...f,
@@ -324,13 +335,14 @@ export default function LessonEditorPage() {
   const handleMarkerAudioUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadingField('marker-audio');
     setUploadProgress(0);
     try {
       const res = await uploadApi.uploadAudio(file, (pct) => setUploadProgress(pct));
       setMarkerForm(f => ({ ...f, previewAudioUrl: res.data.data }));
       showToast('Upload audio thành công', 'success');
     } catch { showToast('Upload thất bại', 'error'); }
-    finally { setUploadProgress(0); }
+    finally { setUploadingField(null); setUploadProgress(0); }
   };
 
   const checks = [
@@ -366,14 +378,17 @@ export default function LessonEditorPage() {
             <div className="form-grid">
               <div className="form-group"><label className="form-label">Tiêu đề *</label>
                 <input className="form-input" value={form.title} onChange={e => setForm({...form, title: e.target.value})} /></div>
-              <div className="form-group"><label className="form-label">Thumbnail</label>
+              {/* <div className="form-group"><label className="form-label">Thumbnail</label>
                 <div className="thumb-upload-area">
                   {form.thumbnailUrl && <img src={form.thumbnailUrl.startsWith('/') ? `http://localhost:8080${form.thumbnailUrl}` : form.thumbnailUrl} alt="" className="thumb-preview" />}
-                  <label className="btn btn-secondary btn-sm"><span><Upload size={12} /> Upload ảnh</span><input type="file" accept="image/*" onChange={handleThumbUpload} hidden /></label>
-                  {uploadProgress > 0 && <UploadProgressBar progress={uploadProgress} label="Đang upload thumbnail..." />}
+                  <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'thumbnail' ? 'btn-disabled' : ''}`}>
+                    <span>{uploadingField === 'thumbnail' ? 'Đang upload...' : <><Upload size={12} /> Upload ảnh</>}</span>
+                    <input type="file" accept="image/*" onChange={handleThumbUpload} hidden disabled={!!uploadingField} />
+                  </label>
+                  {uploadingField === 'thumbnail' && <UploadProgressBar progress={uploadProgress} label="Đang upload thumbnail..." />}
                   <input className="form-input" placeholder="Hoặc nhập URL" value={form.thumbnailUrl} onChange={e => setForm({...form, thumbnailUrl: e.target.value})} />
                 </div>
-              </div>
+              </div> */}
             </div>
             <div className="form-group"><label className="form-label">Mô tả</label>
               <textarea className="form-input form-textarea" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
@@ -466,7 +481,11 @@ export default function LessonEditorPage() {
             ) : (
               <>
                 <div className="tab-header"><h2><FileText size={18} style={{display:'inline', verticalAlign:'middle', marginRight:6}} /> {quiz.title} ({quiz.questions?.length || 0} câu hỏi)</h2>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowQModal(true)}><Plus size={14} /> Thêm câu hỏi</button></div>
+                  <div style={{display:'flex', gap:8}}>
+                    <button className="btn btn-primary btn-sm" onClick={() => setShowQModal(true)}><Plus size={14} /> Thêm câu hỏi</button>
+                    <button className="btn btn-danger btn-sm" onClick={deleteQuiz}><Trash2 size={14} /> Xóa Quiz</button>
+                  </div>
+                </div>
                 {quiz.questions?.length === 0 ? <div className="empty-state"><p className="empty-state-text">Chưa có câu hỏi</p></div> :
                   <div className="questions-list">{quiz.questions.map((q, qi) => (
                     <div key={q.id} className="question-card">
@@ -593,7 +612,11 @@ export default function LessonEditorPage() {
                 <label className="form-label">Preview Audio (tuỳ chọn)</label>
                 <div className="audio-upload-area">
                   {markerForm.previewAudioUrl && <audio controls src={markerForm.previewAudioUrl.startsWith('/') ? `http://localhost:8080${markerForm.previewAudioUrl}` : markerForm.previewAudioUrl} className="audio-player" />}
-                  <label className="btn btn-secondary btn-sm"><span><Music size={12} /> Upload audio</span><input type="file" accept="audio/*" onChange={handleMarkerAudioUpload} hidden /></label>
+                  <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'marker-audio' ? 'btn-disabled' : ''}`}>
+                    <span>{uploadingField === 'marker-audio' ? 'Đang upload...' : <><Music size={12} /> Upload audio</>}</span>
+                    <input type="file" accept="audio/*" onChange={handleMarkerAudioUpload} hidden disabled={!!uploadingField} />
+                  </label>
+                  {uploadingField === 'marker-audio' && <UploadProgressBar progress={uploadProgress} label="Đang upload audio..." />}
                   <input className="form-input" placeholder="Hoặc nhập URL" value={markerForm.previewAudioUrl} onChange={e => setMarkerForm({...markerForm, previewAudioUrl: e.target.value})} />
                 </div>
               </div>
@@ -634,11 +657,11 @@ export default function LessonEditorPage() {
               <div className="form-group"><label className="form-label">Video (tối đa 5 phút)</label>
                 <div className="video-upload-area">
                   {stepForm.fileUrl && <video controls src={fullUrl(stepForm.fileUrl)} className="video-preview-player" />}
-                  <label className={`btn btn-secondary btn-sm ${uploading ? 'btn-disabled' : ''}`}>
-                    <span>{uploading ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
-                    <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={uploading} />
+                  <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'step-video' ? 'btn-disabled' : ''}`}>
+                    <span>{uploadingField === 'step-video' ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
+                    <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={!!uploadingField} />
                   </label>
-                  {uploading && <UploadProgressBar progress={uploadProgress} label="Đang upload video..." />}
+                  {uploadingField === 'step-video' && <UploadProgressBar progress={uploadProgress} label="Đang upload video..." />}
                 </div></div>
               <div className="form-group"><label className="form-label">Mô tả / Caption</label>
                 <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={100} placeholder="Mô tả về video..." /></div>
@@ -658,12 +681,13 @@ export default function LessonEditorPage() {
                       </div>
                     ))}
                     {(stepForm.mediaUrls||[]).length < 4 && (
-                      <label className={`gallery-add ${uploading ? 'btn-disabled' : ''}`}>
-                        <span>{uploading ? '...' : '＋'}</span>
-                        <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} hidden disabled={uploading} />
+                      <label className={`gallery-add ${uploadingField && uploadingField !== 'step-gallery' ? 'btn-disabled' : ''}`}>
+                        <span>{uploadingField === 'step-gallery' ? '...' : '＋'}</span>
+                        <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} hidden disabled={!!uploadingField} />
                       </label>
                     )}
                   </div>
+                  {uploadingField === 'step-gallery' && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
                 </div></div>
               <div className="form-group"><label className="form-label">Mô tả</label>
                 <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={100} placeholder="Mô tả về bộ ảnh..." /></div>
@@ -671,7 +695,7 @@ export default function LessonEditorPage() {
           )}
 
           <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowStepModal(false)}>Hủy</button>
-            <button type="submit" className="btn btn-primary" disabled={uploading}>{editingStep ? 'Cập nhật' : 'Tạo Block'}</button></div>
+            <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>{editingStep ? 'Cập nhật' : 'Tạo Block'}</button></div>
         </form>
       </Modal>
 
