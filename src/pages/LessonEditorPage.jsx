@@ -22,6 +22,11 @@ const STEP_TYPES = [
   { value: 'IMAGE_GALLERY', label: 'Bộ ảnh', icon: Images },
 ];
 
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, '').replace(/<!--.*?-->/g, '').trim();
+};
+
 export default function LessonEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -442,11 +447,11 @@ export default function LessonEditorPage() {
                   <div className="step-order">{(s.orderIndex ?? i) + 1}</div>
                   <div className="step-body">
                     <div className="step-type"><span className={`badge badge-${s.type?.toLowerCase()}`}>{(() => { const ST = STEP_TYPES.find(t=>t.value===s.type); return ST ? <><ST.icon size={12} /> {ST.label}</> : s.type; })()}</span></div>
-                    {s.type === 'TEXT' && <div className="step-text-preview" dangerouslySetInnerHTML={{__html: s.content ? s.content.substring(0, 200) : '<em>Trống</em>'}} />}
+                    {s.type === 'TEXT' && <div className="step-text-preview" dangerouslySetInnerHTML={{__html: s.content || '<em>Trống</em>'}} />}
                     {s.type === 'VIDEO' && (
                       <div className="step-video-preview">
                         {s.fileUrl && <video src={fullUrl(s.fileUrl)} className="step-video-thumb" preload="metadata" />}
-                        {s.content && <p className="step-caption">{s.content.substring(0, 100)}</p>}
+                        {s.content && <div className="step-text-preview" dangerouslySetInnerHTML={{__html: s.content}} />}
                       </div>
                     )}
                     {s.type === 'IMAGE_GALLERY' && (
@@ -454,7 +459,7 @@ export default function LessonEditorPage() {
                         <div className="step-gallery-thumbs">
                           {(s.mediaUrls||[]).slice(0,4).map((url, gi) => <img key={gi} src={fullUrl(url)} alt="" className="step-gallery-thumb" />)}
                         </div>
-                        {s.content && <p className="step-caption">{s.content.substring(0, 100)}</p>}
+                        {s.content && <div className="step-text-preview" dangerouslySetInnerHTML={{__html: s.content}} />}
                       </div>
                     )}
                   </div>

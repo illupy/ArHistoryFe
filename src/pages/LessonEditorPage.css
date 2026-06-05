@@ -92,7 +92,7 @@
 }
 .step-body { flex: 1; min-width: 0; }
 .step-type { margin-bottom: var(--space-xs); }
-.step-text-preview { font-size: var(--fs-sm); color: var(--text-secondary); max-height: 60px; overflow: hidden; }
+.step-text-preview { font-size: var(--fs-sm); color: var(--text-secondary); max-height: 150px; overflow-y: auto; }
 .step-text-preview h3 { font-size: var(--fs-sm); margin: 0; }
 .step-caption { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: var(--space-xs); }
 .step-video-preview { display: flex; align-items: center; gap: var(--space-md); }
