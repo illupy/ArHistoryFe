@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { lessonApi, markerApi, assetApi, quizApi, uploadApi, markerModelApi } from '../api/api';
+import { lessonApi, markerApi, assetApi, quizApi, uploadApi, markerModelApi, annotationApi } from '../api/api';
 import { showToast } from '../components/Toast';
 import UploadProgressBar from '../components/UploadProgressBar';
 import Modal from '../components/Modal';
 import RichTextEditor from '../components/RichTextEditor';
-import { ClipboardList, MapPin, FileText, HelpCircle, Rocket, Type, Video, Images, ArrowLeft, Plus, Pencil, Trash2, Save, Upload, Music, CircleDot, Circle, CheckCircle2, AlertTriangle, Gamepad2, ToggleLeft, ToggleRight, Image as ImageIcon } from 'lucide-react';
+import { ClipboardList, MapPin, FileText, HelpCircle, Rocket, Type, Video, Images, ArrowLeft, Plus, Pencil, Trash2, Save, Upload, Music, CircleDot, Circle, CheckCircle2, AlertTriangle, Gamepad2, ToggleLeft, ToggleRight, Image as ImageIcon, BookMarked, Tag, Eye, Copy, ChevronDown, ChevronUp, ChevronRight, Box } from 'lucide-react';
 import './LessonEditorPage.css';
 
 const TABS = [
@@ -55,6 +55,20 @@ export default function LessonEditorPage() {
   const [uploadingField, setUploadingField] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  // Annotations (lesson-level)
+  const [showAnnotationModal, setShowAnnotationModal] = useState(false);
+  const [editingAnnotation, setEditingAnnotation] = useState(null);
+  const [lessonAnnotations, setLessonAnnotations] = useState([]);
+  const [annotationForm, setAnnotationForm] = useState({
+    keyword: '', title: '', description: '', annotationType: 'IMAGE',
+    mediaUrl: '', modelCode: '', orderIndex: 0
+  });
+  const [showAnnotationModelPicker, setShowAnnotationModelPicker] = useState(false);
+  const [annotationsCollapsed, setAnnotationsCollapsed] = useState(false);
+
+  // Ref for RichTextEditor to insert annotation tags
+  const activeEditorRef = useRef(null);
+
   // Quiz
   const [quiz, setQuiz] = useState(null);
   const [quizTitle, setQuizTitle] = useState('');
@@ -79,14 +93,16 @@ export default function LessonEditorPage() {
       setLesson(d);
       setForm({ title: d.title||'', description: d.description||'', content: d.content||'', thumbnailUrl: d.thumbnailUrl||'' });
 
-      const [mkRes, stRes, mmRes] = await Promise.all([
+      const [mkRes, stRes, mmRes, annRes] = await Promise.all([
         markerApi.getByLesson(id).catch(() => ({ data: { data: [] } })),
         assetApi.getByLesson(id).catch(() => ({ data: { data: [] } })),
         markerModelApi.getAll().catch(() => ({ data: { data: [] } })),
+        annotationApi.getByLesson(id).catch(() => ({ data: { data: [] } })),
       ]);
       setMarkers(mkRes.data.data || []);
       setSteps(stRes.data.data || []);
       setAvailableMarkerModels(mmRes.data.data || []);
+      setLessonAnnotations(annRes.data.data || []);
 
       try {
         const qRes = await quizApi.getByLesson(id);
@@ -255,6 +271,102 @@ export default function LessonEditorPage() {
   };
 
   const fullUrl = (url) => url?.startsWith('/') ? `http://localhost:8080${url}` : url;
+
+  // ===== Annotation Handlers (lesson-level) =====
+  const openAddAnnotation = () => {
+    setEditingAnnotation(null);
+    setAnnotationForm({ keyword: '', title: '', description: '', annotationType: 'IMAGE', mediaUrl: '', modelCode: '', orderIndex: 0 });
+    setShowAnnotationModelPicker(false);
+    setShowAnnotationModal(true);
+  };
+
+  const openEditAnnotation = (ann) => {
+    setEditingAnnotation(ann);
+    setAnnotationForm({
+      keyword: ann.keyword || '', title: ann.title || '', description: ann.description || '',
+      annotationType: ann.annotationType || 'IMAGE', mediaUrl: ann.mediaUrl || '',
+      modelCode: ann.modelCode || '', orderIndex: ann.orderIndex || 0
+    });
+    setShowAnnotationModelPicker(false);
+    setShowAnnotationModal(true);
+  };
+
+  const saveAnnotation = async (e) => {
+    e.preventDefault();
+    if (!annotationForm.keyword.trim()) { showToast('Nhập từ khóa chú thích', 'warning'); return; }
+    if (annotationForm.annotationType === 'IMAGE' && !annotationForm.mediaUrl) { showToast('Vui lòng upload ảnh', 'warning'); return; }
+    if (annotationForm.annotationType === 'MODEL' && !annotationForm.modelCode) { showToast('Vui lòng chọn Model 3D', 'warning'); return; }
+    try {
+      if (editingAnnotation) {
+        await annotationApi.update(editingAnnotation.id, annotationForm);
+        showToast('Cập nhật chú thích thành công', 'success');
+      } else {
+        await annotationApi.create(id, annotationForm);
+        showToast('Tạo chú thích thành công', 'success');
+      }
+      setShowAnnotationModal(false);
+      fetchAll();
+    } catch (err) { showToast(err.response?.data?.message || 'Thất bại', 'error'); }
+  };
+
+  const deleteAnnotation = async (annId) => {
+    if (!confirm('Xóa chú thích này?')) return;
+    try {
+      await annotationApi.delete(annId);
+      showToast('Đã xóa chú thích', 'success');
+      fetchAll();
+    } catch { showToast('Xóa thất bại', 'error'); }
+  };
+
+  const ANNOTATION_TYPES = [
+    { value: 'IMAGE', label: 'Hình ảnh', icon: ImageIcon },
+    { value: 'MODEL', label: 'Model 3D', icon: Box },
+  ];
+
+  const handleAnnotationImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingField('annotation-image');
+    setUploadProgress(0);
+    try {
+      const res = await uploadApi.uploadImage(file, (pct) => setUploadProgress(pct));
+      setAnnotationForm(f => ({ ...f, mediaUrl: res.data.data }));
+      showToast('Upload ảnh thành công', 'success');
+    } catch { showToast('Upload thất bại', 'error'); }
+    finally { setUploadingField(null); setUploadProgress(0); }
+  };
+
+  const selectAnnotationModel = (mm) => {
+    setAnnotationForm(f => ({ ...f, modelCode: mm.previewModelCode || mm.markerCode }));
+    setShowAnnotationModelPicker(false);
+  };
+  // Convert [ann:id] → styled chip spans for editor display
+  const annToHtml = (html) => {
+    if (!html) return html;
+    return html.replace(/\[ann:(\d+)\]/g, (_, id) => {
+      const ann = lessonAnnotations.find(a => String(a.id) === id);
+      const keyword = ann ? ann.keyword : `#${id}`;
+      return `<span class="ann-tag" data-ann-id="${id}" contenteditable="false">${keyword}</span>`;
+    });
+  };
+
+  // Convert styled spans back → [ann:id] for DB storage
+  const htmlToAnn = (html) => {
+    if (!html) return html;
+    return html.replace(/<span[^>]*data-ann-id="(\d+)"[^>]*>[^<]*<\/span>/g, '[ann:$1]');
+  };
+
+  const insertAnnotationTag = (ann) => {
+    if (activeEditorRef.current) {
+      const chipHtml = `<span class="ann-tag" data-ann-id="${ann.id}" contenteditable="false">${ann.keyword}</span>&nbsp;`;
+      activeEditorRef.current.insertText(chipHtml);
+      showToast(`Đã chèn chú thích "${ann.keyword}"`, 'success');
+    } else {
+      navigator.clipboard.writeText(`[ann:${ann.id}]`).then(() => {
+        showToast(`Đã copy [ann:${ann.id}]`, 'success');
+      });
+    }
+  };
 
   // ===== Quiz Tab =====
   const createQuiz = async () => {
@@ -439,6 +551,56 @@ export default function LessonEditorPage() {
         {/* ===== TAB STEPS ===== */}
         {tab === 'steps' && (
           <div className="tab-content animate-fade-in">
+            {/* Lesson Annotations Panel — collapsible, for viewing/managing */}
+            <div className={`lesson-annotations-panel ${annotationsCollapsed ? 'collapsed' : ''}`}>
+              <div className="lesson-annotations-header" onClick={() => setAnnotationsCollapsed(!annotationsCollapsed)} style={{cursor:'pointer'}}>
+                <div className="lesson-annotations-title">
+                  {annotationsCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  <BookMarked size={16} />
+                  <h3>Chú thích bài học ({lessonAnnotations.length})</h3>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); openAddAnnotation(); }}><Plus size={14} /> Thêm</button>
+              </div>
+              {!annotationsCollapsed && (
+                <>
+                  {lessonAnnotations.length === 0 ? (
+                    <div className="lesson-annotations-empty">
+                      <p>Chưa có chú thích. Thêm chú thích để gắn vào nội dung bài học.</p>
+                    </div>
+                  ) : (
+                    <div className="lesson-annotations-list">
+                      {lessonAnnotations.map(ann => (
+                        <div key={ann.id} className="lesson-annotation-card">
+                          <div className="lesson-annotation-info">
+                            <div className="lesson-annotation-icon">
+                              {ann.annotationType === 'IMAGE' ? <ImageIcon size={16} /> : <Box size={16} />}
+                            </div>
+                            <div className="lesson-annotation-details">
+                              <span className="lesson-annotation-keyword">{ann.keyword}</span>
+                              <span className={`annotation-chip-type type-${ann.annotationType?.toLowerCase()}`}>{ann.annotationType === 'IMAGE' ? 'Ảnh' : 'Model 3D'}</span>
+                            </div>
+                            {ann.annotationType === 'IMAGE' && ann.mediaUrl && (
+                              <img src={ann.mediaUrl} alt="" className="lesson-annotation-thumb" />
+                            )}
+                            {ann.annotationType === 'MODEL' && ann.modelCode && (
+                              <span className="lesson-annotation-model-code">{ann.modelCode}</span>
+                            )}
+                          </div>
+                          <div className="lesson-annotation-actions always-visible">
+                            <button className="btn-icon" onClick={() => openEditAnnotation(ann)} title="Sửa"><Pencil size={12} /></button>
+                            <button className="btn-icon" onClick={() => deleteAnnotation(ann.id)} title="Xóa"><Trash2 size={12} /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="lesson-annotations-hint">
+                    <span>💡 Mở modal chỉnh sửa block để chèn chú thích vào nội dung</span>
+                  </div>
+                </>
+              )}
+            </div>
+
             <div className="tab-header"><h2>Nội dung bài học ({steps.length} blocks)</h2>
               <button className="btn btn-primary btn-sm" onClick={openAddStep}><Plus size={14} /> Thêm block</button></div>
             {steps.length === 0 ? <div className="empty-state"><p className="empty-state-text">Chưa có nội dung. Thêm block đầu tiên!</p></div> :
@@ -464,7 +626,7 @@ export default function LessonEditorPage() {
                     )}
                   </div>
                   <div className="step-actions">
-                  <button className="btn-icon" onClick={() => openEditStep(s)} title="Sửa"><Pencil size={14} /></button>
+                    <button className="btn-icon" onClick={() => openEditStep(s)} title="Sửa"><Pencil size={14} /></button>
                     <button className="btn-icon" onClick={() => deleteStep(s.id)} title="Xóa"><Trash2 size={14} /></button>
                   </div>
                 </div>
@@ -633,75 +795,101 @@ export default function LessonEditorPage() {
         </form>
       </Modal>
 
-      <Modal isOpen={showStepModal} onClose={() => setShowStepModal(false)} title={editingStep ? 'Sửa Block' : 'Thêm Block Nội dung'} size="lg">
-        <form onSubmit={saveStep}>
-          <div className="form-grid">
-            <div className="form-group"><label className="form-label">Loại nội dung</label>
-              <div className="step-type-picker">
-                {STEP_TYPES.map(t => (
-                  <button key={t.value} type="button" className={`step-type-btn ${stepForm.type === t.value ? 'active' : ''}`}
-                    onClick={() => setStepForm({...stepForm, type: t.value, fileUrl:'', mediaUrls:[]})}>
-                    <span className="step-type-icon">{<t.icon size={16} />}</span>
-                    <span>{t.label}</span>
+      <Modal isOpen={showStepModal} onClose={() => setShowStepModal(false)} title={editingStep ? 'Sửa Block' : 'Thêm Block Nội dung'} size="xl">
+        <div className="step-modal-layout">
+          {/* Left: Form */}
+          <form onSubmit={saveStep} className="step-modal-form">
+            <div className="form-grid">
+              <div className="form-group"><label className="form-label">Loại nội dung</label>
+                <div className="step-type-picker">
+                  {STEP_TYPES.map(t => (
+                    <button key={t.value} type="button" className={`step-type-btn ${stepForm.type === t.value ? 'active' : ''}`}
+                      onClick={() => setStepForm({...stepForm, type: t.value, fileUrl:'', mediaUrls:[]})}>
+                      <span className="step-type-icon">{<t.icon size={16} />}</span>
+                      <span>{t.label}</span>
+                    </button>
+                  ))}
+                </div></div>
+              <div className="form-group"><label className="form-label">Thứ tự</label>
+                <input className="form-input" type="number" value={stepForm.orderIndex} onChange={e => setStepForm({...stepForm, orderIndex: parseInt(e.target.value)||0})} /></div>
+            </div>
+
+            {/* TEXT type */}
+            {stepForm.type === 'TEXT' && (
+              <div className="form-group"><label className="form-label">Nội dung văn bản</label>
+                <RichTextEditor ref={activeEditorRef} value={annToHtml(stepForm.content)} onChange={val => setStepForm({...stepForm, content: htmlToAnn(val)})} minHeight={200} placeholder="Soạn nội dung bài học..." /></div>
+            )}
+
+            {/* VIDEO type */}
+            {stepForm.type === 'VIDEO' && (
+              <>
+                <div className="form-group"><label className="form-label">Video (tối đa 5 phút)</label>
+                  <div className="video-upload-area">
+                    {stepForm.fileUrl && <video controls src={fullUrl(stepForm.fileUrl)} className="video-preview-player" />}
+                    <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'step-video' ? 'btn-disabled' : ''}`}>
+                      <span>{uploadingField === 'step-video' ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
+                      <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={!!uploadingField} />
+                    </label>
+                    {uploadingField === 'step-video' && <UploadProgressBar progress={uploadProgress} label="Đang upload video..." />}
+                  </div></div>
+                <div className="form-group"><label className="form-label">Mô tả / Caption</label>
+                  <RichTextEditor ref={activeEditorRef} value={annToHtml(stepForm.content)} onChange={val => setStepForm({...stepForm, content: htmlToAnn(val)})} minHeight={100} placeholder="Mô tả về video..." /></div>
+              </>
+            )}
+
+            {/* IMAGE_GALLERY type */}
+            {stepForm.type === 'IMAGE_GALLERY' && (
+              <>
+                <div className="form-group"><label className="form-label">Ảnh (tối đa 4 ảnh)</label>
+                  <div className="gallery-upload-area">
+                    <div className="gallery-grid">
+                      {(stepForm.mediaUrls||[]).map((url, gi) => (
+                        <div key={gi} className="gallery-item">
+                          <img src={fullUrl(url)} alt="" className="gallery-item-img" />
+                          <button type="button" className="gallery-remove" onClick={() => removeGalleryImage(gi)}>×</button>
+                        </div>
+                      ))}
+                      {(stepForm.mediaUrls||[]).length < 4 && (
+                        <label className={`gallery-add ${uploadingField && uploadingField !== 'step-gallery' ? 'btn-disabled' : ''}`}>
+                          <span>{uploadingField === 'step-gallery' ? '...' : '＋'}</span>
+                          <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} hidden disabled={!!uploadingField} />
+                        </label>
+                      )}
+                    </div>
+                    {uploadingField === 'step-gallery' && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
+                  </div></div>
+                <div className="form-group"><label className="form-label">Mô tả</label>
+                  <RichTextEditor ref={activeEditorRef} value={annToHtml(stepForm.content)} onChange={val => setStepForm({...stepForm, content: htmlToAnn(val)})} minHeight={100} placeholder="Mô tả về bộ ảnh..." /></div>
+              </>
+            )}
+
+            <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowStepModal(false)}>Hủy</button>
+              <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>{editingStep ? 'Cập nhật' : 'Tạo Block'}</button></div>
+          </form>
+
+          {/* Right: Annotation sidebar */}
+          {lessonAnnotations.length > 0 && (
+            <div className="step-modal-annotations">
+              <div className="step-modal-ann-header">
+                <BookMarked size={14} />
+                <span>Chú thích ({lessonAnnotations.length})</span>
+              </div>
+              <div className="step-modal-ann-list">
+                {lessonAnnotations.map(ann => (
+                  <button key={ann.id} type="button" className="step-modal-ann-item" onClick={() => insertAnnotationTag(ann)}
+                    title={`Chèn [ann:${ann.id}] — ${ann.keyword}`}>
+                    <span className="step-modal-ann-icon">
+                      {ann.annotationType === 'IMAGE' ? <ImageIcon size={12} /> : <Box size={12} />}
+                    </span>
+                    <span className="step-modal-ann-keyword">{ann.keyword}</span>
+                    <Copy size={10} className="step-modal-ann-copy" />
                   </button>
                 ))}
-              </div></div>
-            <div className="form-group"><label className="form-label">Thứ tự</label>
-              <input className="form-input" type="number" value={stepForm.orderIndex} onChange={e => setStepForm({...stepForm, orderIndex: parseInt(e.target.value)||0})} /></div>
-          </div>
-
-          {/* TEXT type */}
-          {stepForm.type === 'TEXT' && (
-            <div className="form-group"><label className="form-label">Nội dung văn bản</label>
-              <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={200} placeholder="Soạn nội dung bài học..." /></div>
+              </div>
+              <div className="step-modal-ann-hint">Click để chèn vào vị trí cursor</div>
+            </div>
           )}
-
-          {/* VIDEO type */}
-          {stepForm.type === 'VIDEO' && (
-            <>
-              <div className="form-group"><label className="form-label">Video (tối đa 5 phút)</label>
-                <div className="video-upload-area">
-                  {stepForm.fileUrl && <video controls src={fullUrl(stepForm.fileUrl)} className="video-preview-player" />}
-                  <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'step-video' ? 'btn-disabled' : ''}`}>
-                    <span>{uploadingField === 'step-video' ? 'Đang upload...' : <><Upload size={12} /> Upload video</>}</span>
-                    <input type="file" accept="video/*" onChange={handleVideoUpload} hidden disabled={!!uploadingField} />
-                  </label>
-                  {uploadingField === 'step-video' && <UploadProgressBar progress={uploadProgress} label="Đang upload video..." />}
-                </div></div>
-              <div className="form-group"><label className="form-label">Mô tả / Caption</label>
-                <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={100} placeholder="Mô tả về video..." /></div>
-            </>
-          )}
-
-          {/* IMAGE_GALLERY type */}
-          {stepForm.type === 'IMAGE_GALLERY' && (
-            <>
-              <div className="form-group"><label className="form-label">Ảnh (tối đa 4 ảnh)</label>
-                <div className="gallery-upload-area">
-                  <div className="gallery-grid">
-                    {(stepForm.mediaUrls||[]).map((url, gi) => (
-                      <div key={gi} className="gallery-item">
-                        <img src={fullUrl(url)} alt="" className="gallery-item-img" />
-                        <button type="button" className="gallery-remove" onClick={() => removeGalleryImage(gi)}>×</button>
-                      </div>
-                    ))}
-                    {(stepForm.mediaUrls||[]).length < 4 && (
-                      <label className={`gallery-add ${uploadingField && uploadingField !== 'step-gallery' ? 'btn-disabled' : ''}`}>
-                        <span>{uploadingField === 'step-gallery' ? '...' : '＋'}</span>
-                        <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} hidden disabled={!!uploadingField} />
-                      </label>
-                    )}
-                  </div>
-                  {uploadingField === 'step-gallery' && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
-                </div></div>
-              <div className="form-group"><label className="form-label">Mô tả</label>
-                <RichTextEditor value={stepForm.content} onChange={val => setStepForm({...stepForm, content: val})} minHeight={100} placeholder="Mô tả về bộ ảnh..." /></div>
-            </>
-          )}
-
-          <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowStepModal(false)}>Hủy</button>
-            <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>{editingStep ? 'Cập nhật' : 'Tạo Block'}</button></div>
-        </form>
+        </div>
       </Modal>
 
       <Modal isOpen={showQModal} onClose={() => setShowQModal(false)} title="Thêm câu hỏi" size="md">
@@ -719,6 +907,94 @@ export default function LessonEditorPage() {
             ))}</div>
           <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowQModal(false)}>Hủy</button>
             <button type="submit" className="btn btn-primary">Thêm câu hỏi</button></div>
+        </form>
+      </Modal>
+
+      {/* ===== ANNOTATION MODAL ===== */}
+      <Modal isOpen={showAnnotationModal} onClose={() => { setShowAnnotationModal(false); setEditingAnnotation(null); }} title={editingAnnotation ? 'Sửa Chú thích' : 'Thêm Chú thích'} size="md">
+        <form onSubmit={saveAnnotation}>
+          <div className="form-group">
+            <label className="form-label">Từ khóa chú thích (keyword) *</label>
+            <input className="form-input" value={annotationForm.keyword} onChange={e => setAnnotationForm({...annotationForm, keyword: e.target.value})} placeholder="VD: Ngô Quyền, cọc gỗ..." autoFocus />
+          </div>
+          <div className="form-grid">
+            <div className="form-group"><label className="form-label">Tiêu đề</label>
+              <input className="form-input" value={annotationForm.title} onChange={e => setAnnotationForm({...annotationForm, title: e.target.value})} placeholder="Tiêu đề hiển thị" />
+            </div>
+            <div className="form-group"><label className="form-label">Thứ tự</label>
+              <input className="form-input" type="number" value={annotationForm.orderIndex} onChange={e => setAnnotationForm({...annotationForm, orderIndex: parseInt(e.target.value)||0})} />
+            </div>
+          </div>
+          <div className="form-group"><label className="form-label">Loại chú thích *</label>
+            <div className="annotation-type-picker">
+              {ANNOTATION_TYPES.map(t => (
+                <button key={t.value} type="button" className={`step-type-btn ${annotationForm.annotationType === t.value ? 'active' : ''}`}
+                  onClick={() => setAnnotationForm({...annotationForm, annotationType: t.value, mediaUrl: '', modelCode: ''})}>
+                  <span className="step-type-icon"><t.icon size={16} /></span>
+                  <span>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* IMAGE type */}
+          {annotationForm.annotationType === 'IMAGE' && (
+            <div className="form-group"><label className="form-label">Ảnh minh họa *</label>
+              <div className="annotation-media-area">
+                {annotationForm.mediaUrl && <img src={annotationForm.mediaUrl} alt="" className="annotation-media-preview" />}
+                <label className={`btn btn-secondary btn-sm ${uploadingField && uploadingField !== 'annotation-image' ? 'btn-disabled' : ''}`}>
+                  <span>{uploadingField === 'annotation-image' ? 'Đang upload...' : <><Upload size={12} /> Upload ảnh</>}</span>
+                  <input type="file" accept="image/*" onChange={handleAnnotationImageUpload} hidden disabled={!!uploadingField} />
+                </label>
+                {uploadingField === 'annotation-image' && <UploadProgressBar progress={uploadProgress} label="Đang upload ảnh..." />}
+                <input className="form-input" placeholder="Hoặc nhập URL ảnh" value={annotationForm.mediaUrl} onChange={e => setAnnotationForm({...annotationForm, mediaUrl: e.target.value})} />
+              </div>
+            </div>
+          )}
+
+          {/* MODEL type — dropdown picker from marker models */}
+          {annotationForm.annotationType === 'MODEL' && (
+            <div className="form-group"><label className="form-label">Chọn Model 3D *</label>
+              {annotationForm.modelCode ? (
+                <div className="selected-mm-card">
+                  <div className="selected-mm-info">
+                    <Box size={20} />
+                    <div>
+                      <strong>{annotationForm.modelCode}</strong>
+                      <span className="selected-mm-code">Model 3D</span>
+                    </div>
+                  </div>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setAnnotationForm(f => ({...f, modelCode: ''})); setShowAnnotationModelPicker(true); }}>Đổi</button>
+                </div>
+              ) : (
+                <>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowAnnotationModelPicker(!showAnnotationModelPicker)} style={{marginBottom: 8}}>
+                    <ChevronDown size={14} /> Chọn từ danh sách Marker-Model
+                  </button>
+                  {showAnnotationModelPicker && (
+                    <div className="mm-select-list">
+                      {availableMarkerModels.length === 0 ? <p className="text-muted">Chưa có bộ marker-model nào.</p> :
+                        availableMarkerModels.filter(mm => mm.previewModelCode).map(mm => (
+                          <div key={mm.id} className="mm-select-item" onClick={() => selectAnnotationModel(mm)}>
+                            {mm.imageUrl && <img src={mm.imageUrl} alt="" className="mm-select-img" />}
+                            <div className="mm-select-info">
+                              <strong>{mm.previewModelCode || mm.markerCode}</strong>
+                              <span>Marker: {mm.markerCode}</span>
+                            </div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="modal-actions">
+            <button type="button" className="btn btn-secondary" onClick={() => { setShowAnnotationModal(false); setEditingAnnotation(null); }}>Hủy</button>
+            <button type="submit" className="btn btn-primary" disabled={!!uploadingField}>{editingAnnotation ? 'Cập nhật' : 'Tạo Chú thích'}</button>
+          </div>
         </form>
       </Modal>
 

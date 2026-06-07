@@ -24,7 +24,7 @@ Kết quả build nằm trong thư mục `dist/`.
 Trước khi build, đảm bảo file `.env` có đúng API URL production:
 
 ```env
-VITE_API_BASE_URL=http://IP_VPS
+VITE_API_BASE_URL=http//103.178.235.163/
 ```
 
 ### 3. SSH vào VPS và dọn thư mục cũ

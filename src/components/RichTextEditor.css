@@ -64,3 +64,26 @@
 .rte-content p {
   margin: 0.3em 0;
 }
+
+/* Annotation tag chip inside editor */
+.rte-content .ann-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.25));
+  color: #b45309;
+  font-size: 0.85em;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(245,158,11,0.35);
+  cursor: default;
+  user-select: all;
+  vertical-align: baseline;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.rte-content .ann-tag:hover {
+  border-color: rgba(245,158,11,0.6);
+  box-shadow: 0 0 0 2px rgba(245,158,11,0.12);
+}

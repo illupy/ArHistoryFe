@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
 import './RichTextEditor.css';
 
 const TOOLBAR_ACTIONS = [
@@ -10,10 +10,35 @@ const TOOLBAR_ACTIONS = [
   { cmd: 'formatBlock_H3', icon: 'H', title: 'Tiêu đề' },
 ];
 
-export default function RichTextEditor({ value, onChange, placeholder = 'Nhập nội dung...', minHeight = 150 }) {
+const RichTextEditor = forwardRef(function RichTextEditor({ value, onChange, placeholder = 'Nhập nội dung...', minHeight = 150 }, ref) {
   const editorRef = useRef(null);
   const [focused, setFocused] = useState(false);
   const isInternalChange = useRef(false);
+  const savedSelection = useRef(null);
+
+  // Expose insertText method to parent via ref
+  useImperativeHandle(ref, () => ({
+    insertText: (text) => {
+      const el = editorRef.current;
+      if (!el) return;
+      el.focus();
+
+      // Try to restore saved selection
+      if (savedSelection.current) {
+        try {
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(savedSelection.current);
+        } catch (e) {
+          // fallback: place cursor at end
+        }
+      }
+
+      document.execCommand('insertHTML', false, text);
+      isInternalChange.current = true;
+      if (onChange) onChange(el.innerHTML);
+    },
+  }));
 
   // Only set innerHTML when value changes externally (not from user typing)
   useEffect(() => {
@@ -48,6 +73,15 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Nhập 
     document.execCommand('insertHTML', false, text);
   }, []);
 
+  // Save selection on blur so we can restore it when inserting annotation
+  const handleBlur = useCallback(() => {
+    setFocused(false);
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) {
+      savedSelection.current = sel.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
   return (
     <div className={`rte-container ${focused ? 'rte-focused' : ''}`}>
       <div className="rte-toolbar">
@@ -71,11 +105,12 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Nhập 
         style={{ minHeight }}
         onInput={handleInput}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={handleBlur}
         onPaste={handlePaste}
         data-placeholder={placeholder}
       />
     </div>
   );
-}
+});
 
+export default RichTextEditor;

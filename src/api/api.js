@@ -56,6 +56,14 @@ export const lessonApi = {
   getByMarker: (markerCode) => api.get(`/api/lessons/by-marker/${markerCode}`),
 };
 
+// ========== Annotations ==========
+export const annotationApi = {
+  getByLesson: (lessonId) => api.get(`/api/lessons/${lessonId}/annotations`),
+  create: (lessonId, data) => api.post(`/api/lessons/${lessonId}/annotations`, data),
+  update: (id, data) => api.put(`/api/annotations/${id}`, data),
+  delete: (id) => api.delete(`/api/annotations/${id}`),
+};
+
 // ========== Assets (Steps) ==========
 export const assetApi = {
   getByLesson: (lessonId) => api.get(`/api/assets/lesson/${lessonId}`),

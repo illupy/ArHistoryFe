@@ -28,6 +28,7 @@
 .modal-sm { max-width: 400px; }
 .modal-md { max-width: 540px; }
 .modal-lg { max-width: 720px; }
+.modal-xl { max-width: 960px; }
 
 .modal-header {
   display: flex;
