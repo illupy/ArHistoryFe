@@ -94,6 +94,18 @@
 .step-type { margin-bottom: var(--space-xs); }
 .step-text-preview { font-size: var(--fs-sm); color: var(--text-secondary); max-height: 150px; overflow-y: auto; }
 .step-text-preview h3 { font-size: var(--fs-sm); margin: 0; }
+.step-text-preview .ann-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.25));
+  color: #b45309;
+  font-size: 0.85em;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(245,158,11,0.35);
+  vertical-align: baseline;
+  line-height: 1.5;
+}
 .step-caption { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: var(--space-xs); }
 .step-video-preview { display: flex; align-items: center; gap: var(--space-md); }
 .step-video-thumb { width: 120px; height: 68px; border-radius: var(--radius-md); object-fit: cover; background: #000; }
